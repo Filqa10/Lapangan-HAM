@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useTranslation } from '@/lib/i18n';
 import { AdminLoginForm } from './AdminLoginForm';
 
@@ -31,14 +32,14 @@ export default function AdminLoginPage() {
         </div>
 
         {/* Brand Header */}
-        <div className="flex items-center gap-3 relative z-10 stagger-item">
+        <Link href="/" className="flex items-center gap-3 relative z-10 stagger-item hover:opacity-90 transition-opacity">
           <svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true">
             <path d="M8 1 L15 14 L1 14 Z" fill="#e4f222" />
           </svg>
           <span className="text-[18px] font-medium tracking-tight text-white uppercase">
             {t('auth.panel.appName')}
           </span>
-        </div>
+        </Link>
 
         {/* Content Statement & Footer */}
         <div className="relative z-10 space-y-8 stagger-item" style={{ animationDelay: '150ms' }}>
