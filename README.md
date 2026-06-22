@@ -1,107 +1,113 @@
-# Aplikasi Booking Lapangan HAM
+# HAM Stadium Booking
 
-Aplikasi web booking lapangan olahraga menggunakan PHP Native, MySQL, Bootstrap 5, lengkap dengan sistem manajemen harga per-slot, sistem upload bukti pembayaran (DP dan Pelunasan), landing page responsif, serta notifikasi email otomatis.
+Next.js booking app for HAM field reservations with Supabase Auth, Postgres, Storage, role-based customer/admin areas, two-stage payment proof uploads, and admin verification flows.
 
-## Fitur Utama
+## Features
 
-### 🏢 Halaman Publik (Landing Page)
-- Menampilkan informasi layanan dan slider gambar promosi visual lapangan.
-- Daftar lapangan olahraga serta detailnya dapat dilihat bebas tanpa login.
+- Public landing/about experience for booking guidance and field imagery.
+- Customer dashboard, booking creation, booking history, DP proof upload, and final payment proof upload.
+- Admin dashboard, field creation/update/deactivation, booking verification, payment proof review, and cancellation flows.
+- Supabase-backed auth/profile roles, row-level security, storage policies, and RPCs for admin payment transitions.
+- Indonesian pricing rules and status labels for local field operations.
 
-### 👤 Customer Area
-- Register akun (dengan validasi email & nomor telepon) serta Login.
-- Dashboard dengan statistik cepat mengenai riwayat booking.
-- Daftar lapangan beserta sistem reservasi berdasar perhitungan slot jadwal realtime (otomatis menyesuaikan harga berdasarkan durasi jam).
-- Perhitungan Uang Muka (DP) otomatis sebesar 30% dari total kalkulasi biaya.
-- Sistem penyelesaian transaksi (Upload Bukti Pembayaran 2 Tahap):
-  1. Upload Bukti Transfer DP (Uang Muka).
-  2. Upload Bukti Transfer Pelunasan Sisa Pembayaran.
-- History transaksi tercatat detail bersama status realtime.
-- Notifikasi Email responsif saat terjadi verifikasi atau aksi pemesanan.
+## Stack
 
-### 👑 Admin Dashboard
-- Dashboard Statistik Komprehensif (Total Keseluruhan Booking, Pemasukan DP, Akun Customer, dll).
-- CRUD Lapangan Olahraga (Tambah, Lihat, Update Gambar/Detail, Hapus) untuk mengatur harga slot.
-- Manajemen Booking Komplit:
-  - Admin dapat memverifikasi bukti DP yang diupload customer.
-  - Admin dapat memverifikasi bukti pelunasan biaya.
-- Transisi Status Terintegrasi (Pending → DP Paid → Payment 2 Pending → Paid / Confirmed).
+- Next.js 16 App Router with React 19 and TypeScript.
+- Tailwind CSS v4 via PostCSS.
+- Supabase SSR client, Postgres, Auth, and Storage.
+- Vitest for unit and action tests.
+- Resend for optional booking approval email notifications.
 
-## Teknologi yang Digunakan
+## Requirements
 
-- **Backend**: PHP Native
-- **Database**: MySQL (PDO Prepared Statements)
-- **Frontend**: HTML5, CSS3, Vanilla JavaScript (DOM manipulation)
-- **Libraries UI**: Bootstrap 5, Bootstrap Icons, SweetAlert2.
-- **Date/Time Manajemen**: Flatpickr, DataTables.
-- **Mailer**: Sistem Notifikasi Email Otomatis.
-- **Keamanan**: Proteksi Password Hashing (`password_hash`), XSS & SQL Injection Protection, Role-based Access Middleware.
+- Node.js 20 or newer.
+- npm.
+- A Supabase project with Auth, Postgres, and Storage enabled.
+- Optional: a Resend API key if approval notification emails should be sent.
 
-## Arsitektur Alur Pembayaran Booking
+## Environment Variables
 
-Platform berjalan dengan alur keamanan booking bertahap, status berubah otomatis mengikuti interaksi Customer dan Admin:
-1. **`pending`**: Customer men-submit jadwal, aplikasi menahan jadwal tersebut di db dan status pending. Customer **wajib mengunggah Bukti Pembayaran DP (30%)**.
-2. **`dp_paid`**: Admin memeriksa kesesuaian nominal Bukti DP dan melakukan Approve. Sisa saldo pembayaran wajib dilunaskan customer.
-3. **`payment_2_pending`**: Status transisi dimana DP beres dan sistem menunggu Customer mentransfer pelunasan (atau sudah transfer dan menanti verifikasi final admin).
-4. **`confirmed`/`paid`**: Admin memverifikasi keabsahan dana pelunasan. Lapangan pada jam tersebut sudah sah terpesan!
+Create `.env.local` for local development. Keep it local; do not commit real secrets.
 
-## Panduan Instalasi (Setup)
-
-### 1. Kloning atau Salin Folder Repositori
-Buka terminal dan navigasi ke root lokal Anda (contoh: `htdocs` untuk XAMPP):
 ```bash
-git clone <repository-url>
-cd Lapangan HAM
-```
-*(Atau ganti folder dengan nama direktori yang Anda salin)*
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-or-publishable-key
 
-### 2. Konfigurasi Skema Database (MySQL)
-Buat database kosong melalui phpMyAdmin (disarankan beri nama: `booking_lapangan`).
-Karena aplikasi terus dikembangkan lewat serangkaian update migrasi, pastikan database baru mengimport seluruh script berikut secara *berurutan* (atau import full dump terbaru jika ada):
-1. `database/schema.sql` (Tabel utama bawaan awal)
-2. `database/migration_add_payment_proof.sql` (Update kolom bukti bayar DP)
-3. `database/migration_add_payment_proof_2.sql` (Update kolom bukti bayar Pelunasan dan Status Paid)
-4. `database/migration_add_phone.sql` (Update kolom profil nomor telepon user)
-
-### 3. Konfigurasi Variabel PHP
-Masuk ke direktori `config` dan edit `database.php` untuk menyesuaikan user/pass database MySQL server Anda:
-```php
-<?php
-// config/database.php
-define('DB_HOST', 'localhost');
-define('DB_USER', 'root'); // Sesuaikan admin db anda
-define('DB_PASS', '');     // Sesuaikan pass db anda
-define('DB_NAME', 'booking_lapangan');
+# Optional email notifications
+RESEND_API_KEY=your-resend-api-key
+RESEND_FROM_EMAIL="HAM Futsal <booking@example.com>"
+BOOKING_APPROVAL_EMAIL_TO=ops@example.com
 ```
 
-Juga sesuaikan konstanta Base URL pada file `config/constants.php` agar asset frontend berjalan baik:
-```php
-define('APP_URL', 'http://localhost/Lapangan%20HAM'); 
+`NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are required by the browser client, server client, and Next proxy. Resend variables are optional; the app skips email sending when `RESEND_API_KEY` is empty.
+
+## Local Setup
+
+```bash
+npm install
+npm run dev
 ```
 
-### 4. Setup Izin Folder
-Aplikasi ini mengakomodasi unggahan dokumen, termasuk Bukti Pembayaran dan Gambar Lapangan.
-Berikan permission *Read/Write* pada 2 direktori ini agar skrip PHP bebas mengunggah:
-- `uploads/payment_proofs/`
-- `uploads/fields/`
-Di OS Linux/Mac, lakukkan perintah bash: `chmod -R 777 uploads/`
+Open `http://localhost:3000`.
 
-## Akses Akun Pengguna Default
+Useful routes:
 
-**Akun Administrator Pusat:**
-- **Email**: `admin@bookinglapangan.com`
-- **Password**: `admin123`
+- `/about` - public booking overview.
+- `/customer` - customer dashboard, protected by Supabase session.
+- `/customer/booking/create` - customer booking form.
+- `/customer/history` - customer booking history.
+- `/admin` - admin dashboard, protected by Supabase role.
+- `/admin/fields` - field management.
+- `/admin/bookings` - payment verification and booking operations.
 
-*(Mohon diubah dari interface database atau registrasikan admin baru demi keselamatan sistem bila hosting live!)*
+Protected customer/admin routes redirect unauthenticated visitors to `/login`. Make sure your Supabase Auth UI or login route is wired before production use.
 
-## Troubleshooting Umum
-- **Gambar atau Bukti Transaksi Gagal Diunggah?**
-  Periksa setting file `php.ini` pada WebServer Anda (XAMPP). Set nilai `upload_max_filesize` dan `post_max_size` min. di kisaran 5MB - 10MB.
-- **Email Notifikasi Transaksi Tidak Terkirim?**
-  Bila dirun di dalam Localhost, *Mail SMTP Native PHP* default dalam mode mati. Harap konfigurasi setting fiktif seperti *mailtrap / mailhog*, atau abaikan error jika Anda sekadar tes interface.
-- **Waktu Ketersediaan Jadwal / Harga Slot Saling Bentrok?**
-  Mungkin konfigurasi Timezone PHP Anda bermasalah. Setting konstanta time sudah ditetapkan ke `"Asia/Jakarta"`. Harap samakan *Timezone* database dan PC server.
+## Supabase Database And Storage
 
----
-**Lisensi**: MIT License | Sistem ini Bebas digunakan.  
-Didesain secara khusus untuk kelancaran bisnis olahraga penyewaan lapangan menggunakan kapabilitas PHP Native secara efisien!
+The SQL sources of truth live in `database/`:
+
+- `database/migration.sql` - Postgres schema, enums, indexes, triggers, RLS policies, and admin RPCs.
+- `database/storage.sql` - `field-images` and `payment-proofs` buckets, storage RLS, allowed image MIME types, and 5 MB object limit.
+
+Apply both migrations to a fresh Supabase project before using the app. In managed Supabase workflows, apply them through your migration tool or Supabase MCP. If applying manually for local development, run `migration.sql` first, then `storage.sql`.
+
+After migration:
+
+- Create user accounts through Supabase Auth.
+- Promote staff users by setting `public.profiles.role = 'admin'` for the matching auth user.
+- Store field images in the public `field-images` bucket.
+- Customer payment proofs are stored in the private `payment-proofs` bucket under user-owned folders.
+
+## Scripts
+
+```bash
+npm run dev      # Start the local Next.js dev server
+npm test         # Run Vitest tests
+npm run build    # Run production build and Next type checks
+npm run start    # Serve a built app locally
+npm run lint     # Run ESLint
+npx tsc --noEmit # Optional standalone TypeScript check
+```
+
+## Vercel Deployment Prep
+
+This repo includes `vercel.json` for deployment defaults:
+
+- Next.js framework detection.
+- Legacy PHP URL redirects to the matching Next.js routes where possible.
+- Long-lived cache headers for static assets.
+- Conservative security headers that should not interfere with Supabase Auth or image optimization.
+
+Before deploying on Vercel:
+
+- Add the environment variables from this README in the Vercel project settings.
+- Use production Supabase URL/key values; never paste service-role keys into browser-exposed variables.
+- Apply `database/migration.sql` and `database/storage.sql` to the production Supabase project.
+- Configure Supabase Auth redirect URLs for the Vercel domain and any preview domains you intend to test.
+- Run `npm test` and `npm run build` locally before creating a preview or production deployment.
+
+## Notes
+
+- `.env.local` is ignored by git and should stay local.
+- The legacy PHP/MySQL app has been removed from the top-level runtime paths. New Next/Supabase source lives under `src/`, `database/migration.sql`, and `database/storage.sql`.
+- Existing legacy documentation files may be historical only; prefer this README and the SQL files above for the current Next.js/Supabase app.
