@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { PanelLeftClose, PanelLeftOpen, UserRound } from 'lucide-react';
 import { AdminSidebar } from './AdminSidebar';
 
@@ -13,6 +14,7 @@ export function AdminLayoutClient({ children, profileName }: Props) {
   // Default to open on desktop, closed on mobile
   const [isOpen, setIsOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const checkSize = () => {
@@ -29,6 +31,36 @@ export function AdminLayoutClient({ children, profileName }: Props) {
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
+  };
+
+  const renderBreadcrumbs = () => {
+    if (!pathname) return null;
+    const segments = pathname.split('/').filter(Boolean);
+    
+    return (
+      <nav aria-label="Breadcrumb" className="hidden items-center gap-2 text-sm font-medium sm:flex">
+        <span className="text-[var(--text-muted)] font-normal">Admin</span>
+        {segments.slice(1).map((segment, index) => {
+          const label = segment.charAt(0).toUpperCase() + segment.slice(1);
+          const isLast = index === segments.length - 2;
+          
+          return (
+            <div key={index} className="flex items-center gap-2">
+              <span className="text-[var(--text-muted)] font-normal">/</span>
+              <span className={isLast ? "text-[var(--text-primary)] font-semibold" : "text-[var(--text-muted)] font-normal"}>
+                {label}
+              </span>
+            </div>
+          );
+        })}
+        {segments.length === 1 && (
+          <div className="flex items-center gap-2">
+            <span className="text-[var(--text-muted)] font-normal">/</span>
+            <span className="text-[var(--text-primary)] font-semibold">Dashboard</span>
+          </div>
+        )}
+      </nav>
+    );
   };
 
   return (
@@ -66,6 +98,7 @@ export function AdminLayoutClient({ children, profileName }: Props) {
               {isOpen ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
             </button>
             <p className="text-sm font-medium text-[var(--text-secondary)] lg:hidden">Admin</p>
+            {renderBreadcrumbs()}
           </div>
 
           <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)]">
