@@ -1,42 +1,209 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Surfaces - Default: Light Mode */
+  --bg-body: #F4F2F0;
+  --bg-card: #FFFFFF;
+  --bg-sidebar: #FFFFFF;
+  --bg-input: #FFFFFF;
+  --bg-hero-gradient: linear-gradient(135deg, #1E40AF 0%, #4338CA 50%, #3730A3 100%);
+  --bg-action-hover: rgba(15, 23, 42, 0.05);
+
+  /* Accents */
+  --accent-blue: #0C0A08;
+  --accent-blue-hover: #1A1919;
+  --accent-emerald: #10B981;
+  --accent-amber: #D97706;
+  --accent-red: #DC2626;
+  --accent-cyan: #0891B2;
+  --accent-purple: #7C3AED;
+
+  /* Text */
+  --text-primary: #0C0A08;
+  --text-secondary: #4D505D;
+  --text-muted: #6B6D75;
+
+  /* Borders */
+  --border-subtle: #D2CECB;
+  --border-focus: #0C0A08;
+  --accent-lime: #E4F222;
+
+  /* Animation */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.dark {
+  /* Surfaces - Dark Mode */
+  --bg-body: #0C0A08;
+  --bg-card: #1A1919;
+  --bg-sidebar: #111111;
+  --bg-input: #111111;
+  --bg-action-hover: rgba(255, 255, 255, 0.05);
+
+  /* Accents */
+  --accent-blue: #E4F222;
+  --accent-blue-hover: #D4E41B;
+  --accent-emerald: #10B981;
+  --accent-amber: #F59E0B;
+  --accent-red: #EF4444;
+  --accent-cyan: #06B6D4;
+  --accent-purple: #8B5CF6;
+
+  /* Text */
+  --text-primary: #FFFFFF;
+  --text-secondary: #D2CECB;
+  --text-muted: #999BA3;
+
+  /* Borders */
+  --border-subtle: #33302D;
+  --border-focus: #E4F222;
+  --accent-lime: #E4F222;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Checkmark drawing keyframes */
+@keyframes pathDraw {
+  to {
+    stroke-dashoffset: 0;
   }
 }
 
+@keyframes modalSpring {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-checkmark-draw {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: pathDraw 600ms var(--ease-out) forwards;
+}
+
+.animate-modal-spring {
+  animation: modalSpring 250ms var(--ease-out) forwards;
+}
+
+@theme inline {
+  --color-background: var(--bg-body);
+  --color-foreground: var(--text-primary);
+  --color-action-hover: var(--bg-action-hover);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-geist-mono);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg-body);
+  color: var(--text-primary);
+  font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
 }
 
+::selection {
+  background: var(--accent-lime);
+  color: #0c0a08;
+}
+
+/* Button press feedback — Emil principle */
+button, [role="button"], a.btn {
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+button:active, [role="button"]:active, a.btn:active {
+  transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button:active, [role="button"]:active, a.btn:active {
+    transform: none;
+  }
+}
+
+/* Stagger animation for cards */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.stagger-item {
+  opacity: 0;
+  animation: fadeInUp 300ms var(--ease-out) forwards;
+}
+.stagger-item:nth-child(1) { animation-delay: 0ms; }
+.stagger-item:nth-child(2) { animation-delay: 50ms; }
+.stagger-item:nth-child(3) { animation-delay: 100ms; }
+.stagger-item:nth-child(4) { animation-delay: 150ms; }
+.stagger-item:nth-child(5) { animation-delay: 200ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .stagger-item { animation: none; opacity: 1; }
+}
+
+@keyframes successPanelIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.success-panel-enter {
+  animation: successPanelIn 200ms var(--ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .success-panel-enter { animation: none; }
+}
+
+/* Flatpickr theme overrides */
 .flatpickr-calendar {
-  border-radius: 18px;
-  border: 1px solid rgba(190, 242, 100, 0.22);
-  box-shadow: 0 24px 80px rgba(2, 6, 23, 0.28);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.4);
+  font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
+  color: var(--text-primary);
 }
-
 .flatpickr-day.selected,
 .flatpickr-day.startRange,
 .flatpickr-day.endRange,
 .flatpickr-day.selected:hover {
-  border-color: #bef264;
-  background: #bef264;
-  color: #10231a;
+  border-color: var(--accent-blue);
+  background: var(--accent-blue);
+  color: white;
+}
+
+/* Focus ring */
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--border-focus) 15%, transparent);
+}
+
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+/* Custom Autofill Styles - Emil Design Engineering */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+.dark input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #111827 inset !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
 }
