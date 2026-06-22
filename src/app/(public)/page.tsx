@@ -197,7 +197,7 @@ export default function AboutPage() {
       {/* ============ NAV (transparent over dark hero) ============ */}
       <nav className="absolute top-0 z-50 w-full">
         <div className="mx-auto flex max-w-[1200px] items-center justify-between px-6 py-6">
-          <Link href="/about" className="group flex items-center gap-2.5 transition-transform duration-300 ease-out hover:-translate-y-0.5">
+          <Link href="/" className="group flex items-center gap-2.5 transition-transform duration-300 ease-out hover:-translate-y-0.5">
             <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
               <path d="M8 1 L15 14 L1 14 Z" fill={LIME} />
             </svg>
