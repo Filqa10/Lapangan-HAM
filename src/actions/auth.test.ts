@@ -90,6 +90,7 @@ describe('registerAction', () => {
       password: 'securepass',
       options: {
         data: {
+          email: 'budi@example.com',
           name: 'Budi',
           phone: '08123456',
         },
@@ -134,7 +135,7 @@ function createSupabaseMock() {
 
   return {
     authUserId: 'user-123',
-    authSession: null as any,
+    authSession: null as { access_token?: string } | null,
     authError: null as { message: string } | null,
     queues,
     auth: {
@@ -166,4 +167,3 @@ function createQueryBuilder(table: string, queues: SupabaseMock['queues']) {
 
   return builder;
 }
-

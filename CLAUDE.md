@@ -35,3 +35,5 @@ When performing development tasks (creating features, refactoring, fixing bugs):
    - Create and follow implementation plans.
    - Use TDD (Test-Driven Development) principles where applicable.
    - Follow systematic debugging procedures to trace issues.
+
+Always spawn subagent when doing exploration

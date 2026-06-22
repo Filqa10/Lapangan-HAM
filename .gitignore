@@ -10,10 +10,13 @@
 .codex/
 *.kiro/
 .opencode/
-
+*docs
+*PRODUCT.md
+*DESIGN.md
+*.impeccable
 # Next.js (merged from create-next-app)
 # dependencies
-node_modules/
+/node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -26,11 +29,11 @@ node_modules/
 /coverage
 
 # next.js
-.next/
-out/
+/.next/
+/out/
 
 # production
-build/
+/build
 
 # misc
 *.pem
@@ -50,3 +53,4 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+reference-previous/

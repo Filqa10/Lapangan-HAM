@@ -41,26 +41,45 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
+
+  // Backward compatibility redirects for old routes
+  if (pathname === '/login') {
+    return redirectWithSessionCookies(request, supabaseResponse, '/auth/customer');
+  }
+  if (pathname === '/register') {
+    return redirectWithSessionCookies(request, supabaseResponse, '/auth/customer/register');
+  }
+
   const isAdminRoute = pathname === '/admin' || pathname.startsWith('/admin/');
   const isCustomerRoute = pathname === '/customer' || pathname.startsWith('/customer/');
+  const isAuthCustomerRoute = pathname === '/auth/customer' || pathname.startsWith('/auth/customer/');
+  const isAuthAdminRoute = pathname === '/auth/admin' || pathname.startsWith('/auth/admin/');
 
+  // Auth pages: redirect if already logged in
+  if (isAuthCustomerRoute || isAuthAdminRoute) {
+    if (user) {
+      const role = await getUserRole(supabase, user.id);
+      if (role === 'admin') {
+        return redirectWithSessionCookies(request, supabaseResponse, '/admin');
+      }
+      return redirectWithSessionCookies(request, supabaseResponse, '/customer');
+    }
+    return supabaseResponse;
+  }
+
+  // Protected routes: redirect if not logged in
   if (!isAdminRoute && !isCustomerRoute) {
     return supabaseResponse;
   }
 
   if (!user) {
-    return redirectWithSessionCookies(request, supabaseResponse, '/login', {
+    const loginPath = isAdminRoute ? '/auth/admin' : '/auth/customer';
+    return redirectWithSessionCookies(request, supabaseResponse, loginPath, {
       next: pathname,
     });
   }
 
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .maybeSingle();
-
-  const role = error ? null : (data as Profile | null)?.role ?? null;
+  const role = await getUserRole(supabase, user.id);
 
   if (isAdminRoute && role !== 'admin') {
     return redirectWithSessionCookies(request, supabaseResponse, '/customer');
@@ -71,6 +90,20 @@ export async function updateSession(request: NextRequest) {
   }
 
   return supabaseResponse;
+}
+
+async function getUserRole(
+  supabase: Awaited<ReturnType<typeof createServerClient>>,
+  userId: string,
+): Promise<ProfileRole | null> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (error) return null;
+  return (data as Profile | null)?.role ?? null;
 }
 
 function redirectWithSessionCookies(

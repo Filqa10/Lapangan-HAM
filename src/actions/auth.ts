@@ -75,6 +75,7 @@ export async function registerAction(
     password,
     options: {
       data: {
+        email,
         name,
         phone,
       },
@@ -105,4 +106,3 @@ function isAllowedNextPath(role: ProfileRole, nextPath: string) {
   if (role === 'admin') return nextPath === '/admin' || nextPath.startsWith('/admin/');
   return nextPath === '/customer' || nextPath.startsWith('/customer/');
 }
-

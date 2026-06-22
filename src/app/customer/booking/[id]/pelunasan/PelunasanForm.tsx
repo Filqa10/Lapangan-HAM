@@ -1,8 +1,7 @@
 'use client';
 
-import Link from 'next/link';
 import { useActionState } from 'react';
-import { CreditCard, CircleCheckBig } from 'lucide-react';
+import { CreditCard } from 'lucide-react';
 
 import { submitPelunasanAction } from '@/actions/bookings';
 import { BOOKING_ACTION_INITIAL_STATE } from '@/actions/bookings-utils';

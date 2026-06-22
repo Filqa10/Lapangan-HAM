@@ -45,6 +45,10 @@ describe('database/migration.sql schema definition', () => {
     for (const table of ['profiles', 'fields', 'bookings', 'payments']) {
       expect(sql).toContain(`create table if not exists public.${table}`);
     }
+
+    expect(normalizedSql).toMatch(
+      /create table if not exists public\.profiles\s*\(\s*id\s+uuid primary key references auth\.users on delete cascade,\s*name\s+text not null,\s*email\s+text,\s*phone\s+text,\s*role\s+public\.user_role not null default 'customer'/,
+    );
   });
 
   it('wires the auth-sync and double-booking triggers', () => {
@@ -53,6 +57,15 @@ describe('database/migration.sql schema definition', () => {
     expect(sql).toContain('function public.prevent_double_booking()');
     expect(sql).toContain('before_booking_upsert');
     expect(sql).toContain('doublebookingexception');
+  });
+
+  it('keeps auth-to-profile email sync in the committed migration', () => {
+    expect(normalizedSql).toMatch(
+      /insert into public\.profiles\s*\(\s*id\s*,\s*name\s*,\s*email\s*,\s*phone\s*,\s*role\s*\)\s*values\s*\(\s*new\.id\s*,\s*coalesce\(new\.raw_user_meta_data ->> 'name', 'user'\)\s*,\s*new\.email\s*,\s*new\.raw_user_meta_data ->> 'phone'\s*,\s*'customer'\s*\)/,
+    );
+    expect(normalizedSql).toMatch(
+      /update public\.profiles as p\s*set email = u\.email\s*from auth\.users as u\s*where p\.id = u\.id\s*and u\.email is not null\s*and p\.email is distinct from u\.email/,
+    );
   });
 
   it('pins search_path on every security definer function', () => {

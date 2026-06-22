@@ -12,6 +12,13 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Agent bundles and local tool caches are not part of the app source.
+    ".agents/**",
+    ".opencode/**",
+    ".codex/**",
+    ".claude/**",
+    ".impeccable/**",
+    ".kiro/**",
   ]),
 ]);
 

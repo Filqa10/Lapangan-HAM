@@ -1,9 +1,8 @@
 'use client';
 
-import Link from 'next/link';
 import { useActionState, useState } from 'react';
 import Flatpickr from 'react-flatpickr';
-import { Calendar, Clock, CreditCard, ChevronRight, ChevronLeft, Info, CircleCheckBig } from 'lucide-react';
+import { Calendar, Clock, CreditCard, ChevronRight, ChevronLeft, Info } from 'lucide-react';
 
 import { createBookingAction } from '@/actions/bookings';
 import { BOOKING_ACTION_INITIAL_STATE } from '@/actions/bookings-utils';

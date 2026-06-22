@@ -69,7 +69,7 @@ describe('updateSession auth guard behavior', () => {
 
     expect(response.status).toBe(307);
     expect(response.headers.get('location')).toBe(
-      'http://localhost/login?next=%2Fadmin',
+      'http://localhost/auth/admin?next=%2Fadmin',
     );
   });
 

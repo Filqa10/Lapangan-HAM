@@ -1,8 +1,5 @@
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
-
 import { createClient } from '@/lib/supabase/server';
-
 import { BookingCreateForm } from './BookingCreateForm';
 
 type FieldRow = {
@@ -11,40 +8,43 @@ type FieldRow = {
   address: string | null;
 };
 
-export default async function CreateBookingPage() {
+export default async function BookingCreatePage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect('/login');
-
-  const { data, error } = await supabase
+  const { data: fields } = await supabase
     .from('fields')
     .select('id, name, address')
     .eq('status', 'active')
     .order('name');
 
-  const fields = error ? [] : ((data ?? []) as FieldRow[]);
-
   return (
-    <main className="min-h-screen bg-[#06140f] px-6 py-8 text-lime-50 sm:px-10 lg:px-16">
-      <div className="mx-auto max-w-6xl">
-        <Link href="/customer" className="text-sm font-bold text-lime-200/75 hover:text-lime-100">
-          Kembali ke dashboard
-        </Link>
-        <div className="my-8 max-w-3xl">
-          <p className="font-mono text-sm tracking-[0.3em] text-lime-200 uppercase">Booking baru</p>
-          <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-6xl">Pilih slot, lihat DP, unggah bukti.</h1>
-          <p className="mt-4 text-lime-50/65">Harga dihitung langsung dari aturan slot HAM. Setelah bukti DP masuk, admin akan memverifikasi sebelum status berubah.</p>
+    <div className="space-y-8">
+      {/* Hero header */}
+      <section
+        className="relative overflow-hidden rounded-[12px] p-8 sm:p-10 text-white"
+        style={{
+          background: 'linear-gradient(165deg, #0c0a08 0%, #0c0a08 30%, #1d2740 60%, #3a548c 80%, #5683d2 92%, #f4f2f0 100%)',
+        }}
+      >
+        <div className="flex items-center gap-2 text-[12px] font-medium uppercase tracking-[0.02em] text-[#999ba3]">
+          <Link href="/customer" className="transition hover:text-white">Dashboard</Link>
+          <span>/</span>
+          <span className="text-white font-medium">New Booking</span>
         </div>
-        {error ? (
-          <p className="mb-5 rounded-2xl border border-red-200/30 bg-red-950/50 px-4 py-3 text-red-100">
-            Data lapangan belum bisa dimuat. Form tetap ditampilkan dalam mode kosong.
+        <div className="mt-6">
+          <span className="inline-flex items-center gap-2 text-[12px] font-medium uppercase tracking-[0.02em] text-[#999ba3]">
+            <span className="inline-block h-[6px] w-[6px] rounded-full bg-[#e4f222]" />
+            BOOKING FORM
+          </span>
+          <h1 className="mt-3 text-[32px] sm:text-[40px] font-normal leading-[1.1] tracking-tight uppercase text-white">
+            Book Your Field
+          </h1>
+          <p className="mt-2.5 max-w-lg text-[16px] leading-relaxed text-white/70">
+            Fill in booking details, make the DP transfer, and upload payment proof.
           </p>
-        ) : null}
-        <BookingCreateForm fields={fields} />
-      </div>
-    </main>
+        </div>
+      </section>
+
+      <BookingCreateForm fields={(fields ?? []) as FieldRow[]} />
+    </div>
   );
 }
