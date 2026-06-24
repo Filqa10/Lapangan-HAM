@@ -1,24 +1,48 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Calendar, CheckCircle2, Landmark, LayoutGrid, TrendingUp } from 'lucide-react';
 
 import { useTranslation } from '@/lib/i18n';
 
+type BookingRow = {
+  id: number;
+  field_id: number;
+  booking_date: string;
+  status: string;
+  price: number | string;
+  fields: { name: string } | { name: string }[] | null;
+};
+
+type PaymentRow = {
+  amount: number | string;
+  status: string;
+  created_at: string;
+  bookings: {
+    field_id: number;
+    fields: {
+      name: string;
+    } | { name: string }[] | null;
+  } | {
+    field_id: number;
+    fields: {
+      name: string;
+    } | { name: string }[] | null;
+  }[] | null;
+};
+
+type FieldRow = {
+  id: number;
+  name: string;
+  price: number | string;
+  status: string;
+};
+
 type Props = {
-  stats: {
-    activeFieldCount: number;
-    totalFieldCount: number;
-    totalBookingCount: number;
-    pendingCount: number;
-    dpPaidCount: number;
-    confirmedCount: number;
-    dpRevenue: number;
-    todayRevenue: number;
-    thisMonthRevenue: number;
-  };
-  last7Days: { date: string; revenue: number }[];
-  last6Months: { month: string; revenue: number }[];
+  fields: FieldRow[];
+  bookings: BookingRow[];
+  payments: PaymentRow[];
 };
 
 type MetricTileProps = {
@@ -107,8 +131,45 @@ function TrendTable({
   );
 }
 
-export function AdminDashboardClient({ stats, last7Days, last6Months }: Props) {
+export function AdminDashboardClient({ fields, bookings, payments }: Props) {
   const { t, locale } = useTranslation();
+  const [selectedFieldId, setSelectedFieldId] = useState<string>('all');
+
+  const filteredBookings = bookings.filter((b) => {
+    if (selectedFieldId === 'all') return true;
+    return String(b.field_id) === selectedFieldId;
+  });
+
+  const getFieldIdFromPayment = (p: PaymentRow): number | null => {
+    const booking = Array.isArray(p.bookings) ? p.bookings[0] : p.bookings;
+    return booking?.field_id ?? null;
+  };
+
+  const filteredPayments = payments.filter((p) => {
+    if (selectedFieldId === 'all') return true;
+    return String(getFieldIdFromPayment(p)) === selectedFieldId;
+  });
+
+  // Calculate dynamic stats
+  const totalBookingCount = filteredBookings.length;
+  const pendingCount = filteredBookings.filter((b) => ['pending', 'payment_2_pending'].includes(b.status)).length;
+  const confirmedCount = filteredBookings.filter((b) => ['confirmed', 'paid'].includes(b.status)).length;
+
+  const approvedPayments = filteredPayments.filter((p) => p.status === 'approved');
+  const dpRevenue = approvedPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayRevenue = approvedPayments
+    .filter((p) => p.created_at?.startsWith(todayStr))
+    .reduce((sum, p) => sum + Number(p.amount), 0);
+
+  const thisMonthStr = todayStr.slice(0, 7);
+  const thisMonthRevenue = approvedPayments
+    .filter((p) => p.created_at?.startsWith(thisMonthStr))
+    .reduce((sum, p) => sum + Number(p.amount), 0);
+
+  const last7Days = buildDailyRevenue(approvedPayments, 7);
+  const last6Months = buildMonthlyRevenue(approvedPayments, 6);
 
   const todayLabel = new Date().toLocaleDateString(locale === 'id' ? 'id-ID' : 'en-US', {
     day: 'numeric',
@@ -119,6 +180,12 @@ export function AdminDashboardClient({ stats, last7Days, last6Months }: Props) {
     month: 'long',
     year: 'numeric',
   });
+
+  const activeFieldLabel = selectedFieldId === 'all'
+    ? `${fields.filter((f) => f.status === 'active').length}/${fields.length}`
+    : fields.find((f) => String(f.id) === selectedFieldId)?.status === 'active'
+      ? t('admin.active')
+      : t('admin.inactive') || 'Inactive';
 
   return (
     <div className="space-y-6 lg:space-y-8">
@@ -131,11 +198,20 @@ export function AdminDashboardClient({ stats, last7Days, last6Months }: Props) {
             Keep verification work visible, monitor field availability, and track approved payment revenue.
           </p>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Link href="/admin/bookings" className="btn inline-flex items-center justify-center gap-2 rounded-[4px] bg-[var(--text-primary)] px-4 py-2.5 text-sm font-medium text-[var(--bg-card)] transition hover:bg-[var(--accent-blue-hover)] active:scale-[0.97]">
-            {t('admin.verifyPayments')} <ArrowRight size={16} />
-          </Link>
-          <Link href="/admin/fields" className="btn inline-flex items-center justify-center rounded-[4px] border border-[var(--border-subtle)] bg-[var(--bg-card)] px-4 py-2.5 text-sm font-medium text-[var(--text-secondary)] transition hover:bg-[var(--bg-action-hover)] hover:text-[var(--text-primary)] active:scale-[0.97]">
+        <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
+          <select
+            value={selectedFieldId}
+            onChange={(e) => setSelectedFieldId(e.target.value)}
+            className="rounded-[4px] border border-[var(--border-subtle)] bg-[var(--bg-card)] px-3 py-2 text-sm font-medium text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-lime)]"
+          >
+            <option value="all">All Fields</option>
+            {fields.map((field) => (
+              <option key={field.id} value={String(field.id)}>
+                {field.name}
+              </option>
+            ))}
+          </select>
+          <Link href="/admin/fields" className="btn inline-flex items-center justify-center rounded-[4px] border border-[var(--border-subtle)] bg-[var(--bg-card)] px-4 py-2 text-sm font-medium text-[var(--text-secondary)] transition hover:bg-[var(--bg-action-hover)] hover:text-[var(--text-primary)] active:scale-[0.97]">
             {t('admin.fields')}
           </Link>
         </div>
@@ -143,10 +219,10 @@ export function AdminDashboardClient({ stats, last7Days, last6Months }: Props) {
 
       {/* Bird's-Eye View Metrics at the TOP */}
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4" id="admin-stats">
-        <MetricTile label={t('admin.fields')} value={`${stats.activeFieldCount}/${stats.totalFieldCount}`} detail={t('admin.active')} icon={LayoutGrid} />
-        <MetricTile label={t('admin.totalBookingCount')} value={stats.totalBookingCount} detail="All recent bookings" icon={Calendar} />
-        <MetricTile label={t('admin.dpRevenue')} value={money.format(stats.dpRevenue)} detail="Approved payment total" icon={Landmark} />
-        <MetricTile label={t('admin.confirmedPaid')} value={stats.confirmedCount} detail="Ready or completed slots" icon={CheckCircle2} tone="success" />
+        <MetricTile label={t('admin.fields')} value={activeFieldLabel} detail={t('admin.active')} icon={LayoutGrid} />
+        <MetricTile label={t('admin.totalBookingCount')} value={totalBookingCount} detail="All recent bookings" icon={Calendar} />
+        <MetricTile label={t('admin.dpRevenue')} value={money.format(dpRevenue)} detail="Approved payment total" icon={Landmark} />
+        <MetricTile label={t('admin.confirmedPaid')} value={confirmedCount} detail="Ready or completed slots" icon={CheckCircle2} tone="success" />
       </div>
 
       {/* Primary Operations Grid (Action items & Revenue Summary) */}
@@ -156,37 +232,22 @@ export function AdminDashboardClient({ stats, last7Days, last6Months }: Props) {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-[0.02em]">{t('admin.pendingVerification')}</p>
-              <p className="mt-2 text-5xl font-semibold tracking-tight text-[var(--text-primary)]">{stats.pendingCount}</p>
+              <p className="mt-2 text-5xl font-semibold tracking-tight text-[var(--text-primary)]">{pendingCount}</p>
             </div>
             <Link href="/admin/bookings" className="btn inline-flex items-center justify-center gap-2 rounded-[4px] bg-[var(--accent-lime)] px-4 py-2.5 text-sm font-medium text-[#0c0a08] transition hover:opacity-90 active:scale-[0.97]">
               {t('admin.verifyPayments')} <ArrowRight size={16} />
             </Link>
-          </div>
-          
-          <div className="mt-6 grid gap-4 border-t border-[var(--border-subtle)] pt-5 sm:grid-cols-3">
-            <div>
-              <p className="text-xs text-[var(--text-muted)] uppercase tracking-[0.02em]">{t('admin.dpPaid')}</p>
-              <p className="mt-1 text-xl font-medium text-[var(--text-primary)]">{stats.dpPaidCount}</p>
-            </div>
-            <div className="border-t border-[var(--border-subtle)] pt-4 sm:border-t-0 sm:border-l sm:pl-4 sm:pt-0">
-              <p className="text-xs text-[var(--text-muted)] uppercase tracking-[0.02em]">{t('admin.confirmedPaid')}</p>
-              <p className="mt-1 text-xl font-medium text-[var(--text-primary)]">{stats.confirmedCount}</p>
-            </div>
-            <div className="border-t border-[var(--border-subtle)] pt-4 sm:border-t-0 sm:border-l sm:pl-4 sm:pt-0">
-              <p className="text-xs text-[var(--text-muted)] uppercase tracking-[0.02em]">{t('admin.totalBookingCount')}</p>
-              <p className="mt-1 text-xl font-medium text-[var(--text-primary)]">{stats.totalBookingCount}</p>
-            </div>
           </div>
         </div>
 
         {/* Revenue Summary */}
         <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-5 text-[var(--text-primary)]">
           <p className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-[0.02em]">{t('admin.todayRevenue')}</p>
-          <p className="mt-3 text-3xl font-semibold tracking-tight text-[var(--text-primary)]" suppressHydrationWarning>{money.format(stats.todayRevenue)}</p>
+          <p className="mt-3 text-3xl font-semibold tracking-tight text-[var(--text-primary)]" suppressHydrationWarning>{money.format(todayRevenue)}</p>
           <p className="mt-2 text-xs text-[var(--text-muted)]" suppressHydrationWarning>{todayLabel}</p>
           <div className="mt-6 border-t border-[var(--border-subtle)] pt-4">
             <p className="text-xs text-[var(--text-muted)] uppercase tracking-[0.02em]">{t('admin.thisMonthRevenue')}</p>
-            <p className="mt-1 text-xl font-semibold text-[var(--text-primary)]" suppressHydrationWarning>{money.format(stats.thisMonthRevenue)}</p>
+            <p className="mt-1 text-xl font-semibold text-[var(--text-primary)]" suppressHydrationWarning>{money.format(thisMonthRevenue)}</p>
             <p className="mt-1 text-xs text-[var(--text-muted)]" suppressHydrationWarning>{monthLabel}</p>
           </div>
         </div>
@@ -199,4 +260,51 @@ export function AdminDashboardClient({ stats, last7Days, last6Months }: Props) {
       </div>
     </div>
   );
+}
+
+function buildDailyRevenue(payments: PaymentRow[], limit: number) {
+  const dailyMap: Record<string, number> = {};
+
+  payments.forEach((p) => {
+    if (!p.created_at) return;
+    const datePart = typeof p.created_at === 'string' ? p.created_at.slice(0, 10) : new Date(p.created_at).toISOString().slice(0, 10);
+    const [y, m, d] = datePart.split('-');
+    const label = `${d}/${m}/${y}`;
+    dailyMap[label] = (dailyMap[label] ?? 0) + Number(p.amount);
+  });
+
+  return Object.entries(dailyMap)
+    .map(([date, revenue]) => ({ date, revenue }))
+    .sort((a, b) => {
+      const [da, ma, ya] = a.date.split('/').map(Number);
+      const [db, mb, yb] = b.date.split('/').map(Number);
+      return new Date(yb, mb - 1, db).getTime() - new Date(ya, ma - 1, da).getTime();
+    })
+    .slice(0, limit);
+}
+
+function buildMonthlyRevenue(payments: PaymentRow[], limit: number) {
+  const monthlyMap: Record<string, { label: string; revenue: number }> = {};
+
+  payments.forEach((p) => {
+    if (!p.created_at) return;
+    const datePart = typeof p.created_at === 'string' ? p.created_at.slice(0, 10) : new Date(p.created_at).toISOString().slice(0, 10);
+    const [y, m] = datePart.split('-').map(Number);
+    const dateObj = new Date(y, m - 1, 1);
+    const key = `${y}-${String(m).padStart(2, '0')}`;
+    const label = dateObj.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+
+    if (!monthlyMap[key]) {
+      monthlyMap[key] = { label, revenue: 0 };
+    }
+    monthlyMap[key].revenue += Number(p.amount);
+  });
+
+  return Object.keys(monthlyMap)
+    .sort((a, b) => b.localeCompare(a))
+    .map((key) => ({
+      month: monthlyMap[key].label,
+      revenue: monthlyMap[key].revenue,
+    }))
+    .slice(0, limit);
 }

@@ -171,6 +171,8 @@ const id: Record<string, string> = {
   'admin.last7Days': 'Tren 7 Hari Terakhir',
   'admin.last6Months': 'Tren 6 Bulan Terakhir',
   'admin.thisMonthRevenue': 'PENDAPATAN BULAN INI',
+  'admin.upcomingRevenue': 'PENDAPATAN AKAN DATANG',
+  'admin.upcomingRevenueDetail': 'Total harga dari booking aktif',
   'admin.date': 'TANGGAL',
   'admin.revenue': 'PENDAPATAN',
   'admin.monthCol': 'BULAN',

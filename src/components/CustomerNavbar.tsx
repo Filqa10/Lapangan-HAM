@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { Calendar, History, Home, LogOut, Menu, User, X } from 'lucide-react';
@@ -27,11 +28,14 @@ export function CustomerNavbar({ userName }: CustomerNavbarProps) {
   return (
     <nav className="sticky top-0 z-50 border-b border-[#d2cecb] dark:border-slate-800 bg-[var(--bg-body)]/95 backdrop-blur-md" id="customer-navbar">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/customer" className="flex items-center gap-2.5 text-[17px] font-medium tracking-tight text-[#0c0a08] dark:text-white uppercase">
-          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" className="shrink-0">
-            <path d="M8 1 L15 14 L1 14 Z" fill="#e4f222" />
-          </svg>
-          {t('common.appName')}
+        <Link href="/customer" className="flex items-center">
+          <Image
+            src="/assets/Logo-HAM-fix.png"
+            alt="HAM Stadium Logo"
+            width={150}
+            height={150}
+            className="h-16 w-auto shrink-0 object-contain invert dark:invert-0"
+          />
         </Link>
 
         {/* Desktop nav */}
@@ -42,11 +46,10 @@ export function CustomerNavbar({ userName }: CustomerNavbarProps) {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`flex items-center gap-2 rounded-[4px] px-3.5 py-1.5 text-sm font-medium transition-[background-color,color,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.97] ${
-                  isActive
+                className={`flex items-center gap-2 rounded-[4px] px-3.5 py-1.5 text-sm font-medium transition-[background-color,color,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.97] ${isActive
                     ? 'bg-[#f4f2f0] dark:bg-slate-800/80 text-[#0c0a08] dark:text-white'
                     : 'text-[#999ba3] hover:bg-[#f4f2f0]/60 dark:hover:bg-slate-800/30 hover:text-[#0c0a08] dark:hover:text-white'
-                }`}
+                  }`}
               >
                 <link.icon size={15} />
                 {t(link.labelKey)}
@@ -58,7 +61,7 @@ export function CustomerNavbar({ userName }: CustomerNavbarProps) {
         <div className="flex items-center gap-3">
           <ThemeToggle />
           <LanguageToggle />
-          
+
           {/* User profile & Signout consolidated control */}
           <div className="hidden items-center md:flex rounded-[4px] border border-[#d2cecb] dark:border-slate-800 bg-white dark:bg-slate-900 p-0.5">
             <div className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#4d505d] dark:text-slate-300">
