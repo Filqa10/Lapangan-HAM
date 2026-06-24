@@ -384,11 +384,56 @@ begin
   end if;
 
   update public.payments set status = 'approved' where id = v_payment_id;
-  update public.bookings set status = 'dp_paid' where id = p_booking_id;
+
+  -- Transition status directly to confirmed if booking is fully paid upfront
+  if v_booking.dp_amount = v_booking.price then
+    update public.bookings set status = 'confirmed' where id = p_booking_id;
+  else
+    update public.bookings set status = 'dp_paid' where id = p_booking_id;
+  end if;
 
   return query select v_booking.id, v_booking.user_id;
 end;
 $$;
+
+create or replace function public.admin_complete_payment_offline(p_booking_id bigint)
+returns table (booking_id bigint, user_id uuid)
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+declare
+  v_booking public.bookings%rowtype;
+  v_final_amount numeric(10, 2);
+begin
+  if not public.is_admin() then
+    raise exception 'Forbidden: admin role required';
+  end if;
+
+  select * into v_booking
+  from public.bookings
+  where id = p_booking_id and status = 'dp_paid'
+  for update;
+
+  if not found then
+    raise exception 'BookingNotDPPaid: booking must be dp_paid to complete payment offline';
+  end if;
+
+  v_final_amount := v_booking.price - v_booking.dp_amount;
+
+  -- Insert final payment record approved automatically
+  insert into public.payments (booking_id, amount, payment_type, receipt_url, status)
+  values (p_booking_id, v_final_amount, 'final', 'offline-cash', 'approved');
+
+  -- Update booking status to confirmed
+  update public.bookings set status = 'confirmed' where id = p_booking_id;
+
+  return query select v_booking.id, v_booking.user_id;
+end;
+$$;
+
+grant execute on function public.admin_complete_payment_offline(bigint) to authenticated;
+revoke execute on function public.admin_complete_payment_offline(bigint) from anon;
 
 create or replace function public.admin_approve_final_payment(p_booking_id bigint)
 returns table (booking_id bigint, user_id uuid)
