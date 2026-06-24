@@ -289,7 +289,7 @@ const id: Record<string, string> = {
   'about.schedule.available': 'Tersedia',
   'about.schedule.loading': 'Memuat jadwal...',
   'about.schedule.mapTitle': 'Lokasi Stadion HAM',
-  'about.schedule.mapSubtitle': 'Stadion H. Abdul Malik berlokasi strategis dan mudah diakses di wilayah Tangerang Selatan, Banten.',
+  'about.schedule.mapSubtitle': 'Stadion H. Abdul Malik berlokasi strategis dan mudah diakses di wilayah Depok, Jawa Barat.',
 
   // Auth Layout Left Panel
   'auth.panel.appName': 'Stadion HAM',
