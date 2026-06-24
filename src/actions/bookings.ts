@@ -295,6 +295,38 @@ export async function cancelBookingFormAction(
   return cancelBookingAction(formData);
 }
 
+export async function completePaymentOfflineAction(formData: FormData): Promise<BookingActionState> {
+  const bookingId = parseBookingId(formData);
+  if (!bookingId) return { ok: false, error: 'Booking tidak valid.' };
+
+  const supabase = await createClient();
+  const admin = await requireAdmin(supabase);
+  if (!admin.ok) return { ok: false, error: admin.error };
+
+  const { data, error } = await supabase
+    .rpc('admin_complete_payment_offline', { p_booking_id: bookingId })
+    .maybeSingle();
+
+  if (error || !data) {
+    return { ok: false, error: 'Gagal memproses pelunasan offline. Coba lagi.' };
+  }
+
+  revalidateAdminAndCustomerBookingPaths();
+
+  return {
+    ok: true,
+    bookingId,
+    message: 'Pembayaran offline berhasil dicatat dan booking dikonfirmasi lunas.',
+  };
+}
+
+export async function completePaymentOfflineFormAction(
+  _prevState: BookingActionState,
+  formData: FormData,
+): Promise<BookingActionState> {
+  return completePaymentOfflineAction(formData);
+}
+
 async function cleanupBooking(supabase: Awaited<ReturnType<typeof createClient>>, bookingId: number) {
   await supabase
     .from('bookings')

@@ -11,6 +11,7 @@ import {
   approveDPFormAction,
   approveFinalPaymentFormAction,
   cancelBookingFormAction,
+  completePaymentOfflineFormAction,
 } from '@/actions/bookings';
 
 type BookingItem = {
@@ -159,6 +160,15 @@ export function AdminBookingsClient({
               action={approveDPFormAction}
               bookingId={row.id}
               label={t('admin.approveDP')}
+              pendingLabel="..."
+              tone="approve"
+            />
+          )}
+          {row.status === 'dp_paid' && (
+            <BookingActionForm
+              action={completePaymentOfflineFormAction}
+              bookingId={row.id}
+              label="Mark as Lunas"
               pendingLabel="..."
               tone="approve"
             />
