@@ -308,6 +308,7 @@ export async function completePaymentOfflineAction(formData: FormData): Promise<
     .maybeSingle();
 
   if (error || !data) {
+    console.error('completePaymentOfflineAction RPC error:', error, 'data:', data);
     return { ok: false, error: 'Gagal memproses pelunasan offline. Coba lagi.' };
   }
 
