@@ -194,7 +194,7 @@ export default function AboutPage() {
         }
       `}</style>
 
-      {/* ============ NAV (transparent over dark hero) ============ */}
+      {/* ============ NAV (transparent over light hero) ============ */}
       <nav className="absolute top-0 z-50 w-full">
         <div className="mx-auto flex max-w-[1200px] items-center justify-between px-6 py-6">
           <Link href="/" className="group flex items-center transition-transform duration-300 ease-out hover:-translate-y-0.5">
@@ -208,31 +208,31 @@ export default function AboutPage() {
           </Link>
 
           <div className="hidden items-center gap-8 md:flex">
-            <a href="#facilities" className="relative text-[15px] text-white/70 transition duration-300 after:absolute after:-bottom-1.5 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-white/70 after:transition-transform after:duration-300 hover:text-white hover:after:scale-x-100">{t('about.nav.facilities')}</a>
-            <a href="#pricing" className="relative text-[15px] text-white/70 transition duration-300 after:absolute after:-bottom-1.5 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-white/70 after:transition-transform after:duration-300 hover:text-white hover:after:scale-x-100">{t('about.nav.pricing')}</a>
-            <a href="#gallery" className="relative text-[15px] text-white/70 transition duration-300 after:absolute after:-bottom-1.5 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-white/70 after:transition-transform after:duration-300 hover:text-white hover:after:scale-x-100">{t('about.nav.gallery')}</a>
-            <a href="#faq" className="relative text-[15px] text-white/70 transition duration-300 after:absolute after:-bottom-1.5 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-white/70 after:transition-transform after:duration-300 hover:text-white hover:after:scale-x-100">{t('about.nav.faq')}</a>
+            <a href="#facilities" className="relative text-[15px] text-[#4d505d] transition duration-300 after:absolute after:-bottom-1.5 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-[#0c0a08] after:transition-transform after:duration-300 hover:text-[#0c0a08] hover:after:scale-x-100">{t('about.nav.facilities')}</a>
+            <a href="#pricing" className="relative text-[15px] text-[#4d505d] transition duration-300 after:absolute after:-bottom-1.5 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-[#0c0a08] after:transition-transform after:duration-300 hover:text-[#0c0a08] hover:after:scale-x-100">{t('about.nav.pricing')}</a>
+            <a href="#gallery" className="relative text-[15px] text-[#4d505d] transition duration-300 after:absolute after:-bottom-1.5 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-[#0c0a08] after:transition-transform after:duration-300 hover:text-[#0c0a08] hover:after:scale-x-100">{t('about.nav.gallery')}</a>
+            <a href="#faq" className="relative text-[15px] text-[#4d505d] transition duration-300 after:absolute after:-bottom-1.5 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-[#0c0a08] after:transition-transform after:duration-300 hover:text-[#0c0a08] hover:after:scale-x-100">{t('about.nav.faq')}</a>
           </div>
 
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setLocale(locale === 'en' ? 'id' : 'en')}
-              className="rounded-[4px] border border-white/25 px-2.5 py-1.5 text-[13px] font-medium uppercase tracking-wide text-white/80 transition duration-300 hover:-translate-y-0.5 hover:border-white/60 hover:text-white active:translate-y-0"
+              className="rounded-[4px] border border-[#0c0a08]/20 px-2.5 py-1.5 text-[13px] font-medium uppercase tracking-wide text-[#4d505d] transition duration-300 hover:-translate-y-0.5 hover:border-[#0c0a08]/60 hover:text-[#0c0a08] active:translate-y-0 cursor-pointer"
               aria-label="Toggle language"
             >
               {locale === 'en' ? 'EN' : 'ID'}
             </button>
             <Link
               href="/auth/customer"
-              className="hidden rounded-[4px] px-2 py-1.5 text-[15px] font-medium text-white/80 transition duration-300 hover:-translate-y-0.5 hover:text-white active:translate-y-0 sm:block"
+              className="hidden rounded-[4px] px-2 py-1.5 text-[15px] font-medium text-[#4d505d] transition duration-300 hover:-translate-y-0.5 hover:text-[#0c0a08] active:translate-y-0 sm:block"
             >
               {t('about.signIn')}
             </Link>
             <Link
               href="/auth/customer/register"
               className="btn rounded-[4px] px-4 py-2 text-[15px] font-medium transition duration-300 hover:-translate-y-0.5 hover:opacity-90 active:translate-y-0 active:scale-[0.99]"
-              style={{ backgroundColor: PAPER, color: OBSIDIAN }}
+              style={{ backgroundColor: OBSIDIAN, color: PAPER }}
             >
               {t('about.register')}
             </Link>
@@ -240,42 +240,42 @@ export default function AboutPage() {
         </div>
       </nav>
 
-      {/* ============ HERO (dawn-lit dark gradient sky) ============ */}
+      {/* ============ HERO (light minimalist style) ============ */}
       <section
         className="relative overflow-hidden"
         style={{
-          background: `linear-gradient(165deg, ${OBSIDIAN} 0%, ${OBSIDIAN} 22%, #1d2740 52%, #3a548c 74%, #5683d2 88%, ${LIMESTONE} 100%)`,
+          backgroundColor: PAPER,
         }}
       >
         <div className="mx-auto grid max-w-[1200px] grid-cols-1 items-center gap-12 px-6 pt-36 pb-24 lg:grid-cols-12 lg:gap-10 lg:pt-44 lg:pb-28">
           {/* Text */}
           <div className="lg:col-span-6">
             <div className="about-motion-rise" style={motionDelay(0)}>
-              <Eyebrow onDark>{t('about.hero.badge')}</Eyebrow>
+              <Eyebrow>{t('about.hero.badge')}</Eyebrow>
             </div>
-            <h1 className="about-motion-rise mt-6 text-[44px] font-normal leading-[1.03] tracking-tight text-white sm:text-[58px] lg:text-[72px]" style={motionDelay(1)}>
+            <h1 className="about-motion-rise mt-6 text-[44px] font-normal leading-[1.03] tracking-tight text-[#0c0a08] sm:text-[58px] lg:text-[72px]" style={motionDelay(1)}>
               Stadion
               <br />
               H. Abdul Malik
             </h1>
-            <p className="about-motion-rise mt-7 max-w-xl text-[17px] leading-[1.55] text-white/70" style={motionDelay(2)}>
+            <p className="about-motion-rise mt-7 max-w-xl text-[17px] leading-[1.55] text-[#4d505d]" style={motionDelay(2)}>
               {t('landing.heroDescription')}
             </p>
             <div className="about-motion-rise mt-9 flex flex-col gap-3 sm:flex-row" style={motionDelay(3)}>
               <Link
                 href="/customer/booking/create"
-                className="btn group inline-flex items-center justify-center gap-2 rounded-[4px] px-5 py-3 text-[16px] font-medium shadow-[0_16px_50px_rgba(12,10,8,0.16)] transition duration-300 hover:-translate-y-0.5 hover:opacity-95 active:translate-y-0 active:scale-[0.99]"
-                style={{ backgroundColor: PAPER, color: OBSIDIAN }}
+                className="btn group inline-flex items-center justify-center gap-2 rounded-[4px] px-5 py-3 text-[16px] font-medium shadow-[0_16px_50px_rgba(12,10,8,0.06)] transition duration-300 hover:-translate-y-0.5 hover:opacity-95 active:translate-y-0 active:scale-[0.99]"
+                style={{ backgroundColor: LIME, color: OBSIDIAN }}
               >
                 {t('landing.bookNow')} <ArrowRight size={17} className="transition-transform duration-300 group-hover:translate-x-0.5" />
               </Link>
             </div>
-            <p className="about-motion-rise mt-7 text-[14px] text-white/55" style={motionDelay(4)}>{t('about.heroSub')}</p>
+            <p className="about-motion-rise mt-7 text-[14px] text-[#999ba3]" style={motionDelay(4)}>{t('about.heroSub')}</p>
           </div>
 
           {/* Image */}
           <div className="about-motion-rise lg:col-span-6" style={motionDelay(2, 160)}>
-            <div className="group relative aspect-[4/3] w-full overflow-hidden rounded-[12px] border border-white/10 shadow-[0_30px_90px_rgba(12,10,8,0.34)]">
+            <div className="group relative aspect-[4/3] w-full overflow-hidden rounded-[12px] border border-[#d2cecb] shadow-[0_30px_90px_rgba(12,10,8,0.08)]">
               <Image
                 src="/assets/Stadion HAM side view.png"
                 alt="HAM Stadium side view"
@@ -284,7 +284,7 @@ export default function AboutPage() {
                 className="about-motion-image object-cover object-center transition duration-700 group-hover:scale-[1.025]"
                 priority
               />
-              <div className="about-motion-wipe pointer-events-none absolute inset-0" style={{ backgroundColor: OBSIDIAN }} />
+              <div className="about-motion-wipe pointer-events-none absolute inset-0" style={{ backgroundColor: LIMESTONE }} />
             </div>
           </div>
         </div>
