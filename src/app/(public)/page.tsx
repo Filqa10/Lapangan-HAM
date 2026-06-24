@@ -59,19 +59,6 @@ export default function AboutPage() {
 
   const [bookings, setBookings] = useState<DBBooking[]>([]);
   const [loadingBookings, setLoadingBookings] = useState(true);
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 20) {
-        setScrolled(true);
-      } else {
-        setScrolled(false);
-      }
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   const dates = useMemo(() => {
     return Array.from({ length: 5 }, (_, i) => {
@@ -294,13 +281,9 @@ export default function AboutPage() {
         }
       `}</style>
 
-      {/* ============ NAV ============ */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ${
-        scrolled
-          ? 'bg-white/80 backdrop-blur-md border-b border-[#0c0a08]/10 py-3.5 shadow-xs'
-          : 'bg-transparent py-5'
-      }`}>
-        <div className="mx-auto flex max-w-[1200px] items-center justify-between px-6">
+      {/* ============ NAV (transparent over light hero) ============ */}
+      <nav className="absolute top-0 z-50 w-full">
+        <div className="mx-auto flex max-w-[1200px] items-center justify-between px-6 py-6">
           <Link href="/" className="group flex items-center transition-transform duration-300 ease-out hover:-translate-y-0.5">
             <Image
               src="/assets/Logo-HAM-fix.png"
