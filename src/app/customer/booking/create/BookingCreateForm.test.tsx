@@ -109,4 +109,22 @@ describe('BookingCreateForm', () => {
     expect(startTimeSelect.value).toBe('14');
     expect(endTimeSelect.value).toBe('16');
   });
+
+  it('toggles payment option between DP and Full payment and updates display', () => {
+    useActionStateMock.mockReturnValue([{ ok: false }, vi.fn(), false]);
+    mockStorage();
+
+    renderForm();
+
+    fireEvent.click(screen.getByTestId('booking-date'));
+    fireEvent.click(screen.getByRole('button', { name: /payment/i }));
+
+    expect(screen.getByText(/Bayar DP 30%/i)).toBeInTheDocument();
+    expect(screen.getByText(/Bayar Lunas/i)).toBeInTheDocument();
+
+    const fullPaymentButton = screen.getByRole('button', { name: /Bayar Lunas/i });
+    fireEvent.click(fullPaymentButton);
+
+    expect(screen.getByText('Remaining Balance')).toBeInTheDocument();
+  });
 });

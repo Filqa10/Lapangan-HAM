@@ -8,13 +8,22 @@ type FieldRow = {
   address: string | null;
 };
 
-export default async function BookingCreatePage() {
+export default async function BookingCreatePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ date?: string; start?: string; end?: string }>;
+}) {
   const supabase = await createClient();
   const { data: fields } = await supabase
     .from('fields')
     .select('id, name, address')
     .eq('status', 'active')
     .order('name');
+
+  const resolvedParams = await searchParams;
+  const initialDate = resolvedParams.date || '';
+  const initialStart = resolvedParams.start ? Number(resolvedParams.start) : 18;
+  const initialEnd = resolvedParams.end ? Number(resolvedParams.end) : 20;
 
   return (
     <div className="space-y-8">
@@ -44,7 +53,12 @@ export default async function BookingCreatePage() {
         </div>
       </section>
 
-      <BookingCreateForm fields={(fields ?? []) as FieldRow[]} />
+      <BookingCreateForm
+        fields={(fields ?? []) as FieldRow[]}
+        initialDate={initialDate}
+        initialStart={initialStart}
+        initialEnd={initialEnd}
+      />
     </div>
   );
 }
