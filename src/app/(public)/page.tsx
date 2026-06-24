@@ -1,12 +1,23 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Sprout, Lightbulb, Users, Clock, ArrowRight } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import { Sprout, Lightbulb, Users, Clock, ArrowRight, Plus, Minus } from 'lucide-react';
 
 import { useTranslation } from '@/lib/i18n';
-import { BOOKING_PRICE_SLOTS } from '@/config/pricing';
+import { BOOKING_PRICE_SLOTS, calculateBookingPrice } from '@/config/pricing';
+import { createClient } from '@/lib/supabase/client';
+
+const HAMMapWrapper = dynamic(() => import('@/components/HAMMapWrapper'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full w-full items-center justify-center bg-[#f4f2f0]">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#0c0a08]/10 border-t-[#0c0a08]" />
+    </div>
+  ),
+});
 
 /* Ramp palette (DESIGN.md) */
 const PAPER = '#ffffff';
@@ -38,6 +49,82 @@ function Eyebrow({ children, onDark = false }: { children: React.ReactNode; onDa
 
 export default function AboutPage() {
   const { t, locale, setLocale } = useTranslation();
+
+  interface DBBooking {
+    booking_date: string;
+    start_time: string;
+    end_time: string;
+    status: string;
+  }
+
+  const [bookings, setBookings] = useState<DBBooking[]>([]);
+  const [loadingBookings, setLoadingBookings] = useState(true);
+
+  const dates = useMemo(() => {
+    return Array.from({ length: 5 }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+      return d;
+    });
+  }, []);
+
+  const toLocalDateString = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const formatGridDate = (date: Date, localeStr: string) => {
+    const l = localeStr === 'id' ? 'id-ID' : 'en-US';
+    const weekday = date.toLocaleDateString(l, { weekday: 'long' });
+    const day = date.getDate();
+    const month = date.toLocaleDateString(l, { month: 'short' });
+    return `${weekday}, ${day} ${month}`;
+  };
+
+  useEffect(() => {
+    async function fetchBookings() {
+      try {
+        const supabase = createClient();
+        const startDate = toLocalDateString(dates[0]);
+        const endDate = toLocalDateString(dates[4]);
+
+        const { data, error } = await supabase
+          .from('bookings')
+          .select('booking_date, start_time, end_time, status')
+          .neq('status', 'cancelled')
+          .gte('booking_date', startDate)
+          .lte('booking_date', endDate);
+
+        if (error) {
+          console.error('Error fetching bookings:', error);
+        } else if (data) {
+          setBookings(data as DBBooking[]);
+        }
+      } catch (err) {
+        console.error('Failed to fetch bookings:', err);
+      } finally {
+        setLoadingBookings(false);
+      }
+    }
+
+    fetchBookings();
+  }, [dates]);
+
+  const isSlotBooked = (dateStr: string, startHour: number, endHour: number) => {
+    return bookings.some(b => {
+      if (b.booking_date !== dateStr) return false;
+
+      const bStartHour = Number(b.start_time.split(':')[0]);
+      const bEndHour = Number(b.end_time.split(':')[0]);
+
+      const overlapStart = Math.max(startHour, bStartHour);
+      const overlapEnd = Math.min(endHour, bEndHour);
+
+      return overlapStart < overlapEnd;
+    });
+  };
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -450,6 +537,123 @@ export default function AboutPage() {
                 </p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============ SCHEDULE — dynamic availability grid ============ */}
+      <section id="schedule" className="px-6 py-20 lg:py-24 border-t border-[#d2cecb]/20" style={{ backgroundColor: PAPER }}>
+        <div className="mx-auto max-w-[1200px]">
+          <div className="scroll-reveal" style={motionDelay(0, 120)}>
+            <Eyebrow>{t('about.schedule.eyebrow')}</Eyebrow>
+          </div>
+          <h2 className="scroll-reveal mt-5 text-[34px] font-normal leading-[1.1] tracking-tight sm:text-[44px]" style={motionDelay(1, 120)}>
+            {t('about.schedule.title')}
+          </h2>
+          <p className="scroll-reveal mt-4 max-w-2xl text-[17px] leading-relaxed" style={{ ...motionDelay(2, 120), color: SLATE }}>
+            {t('about.schedule.subtitle')}
+          </p>
+
+          {loadingBookings ? (
+            <div className="mt-12 flex h-60 items-center justify-center rounded-[12px] border border-dashed border-[#d2cecb]" style={{ backgroundColor: LIMESTONE }}>
+              <div className="flex flex-col items-center gap-3">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#0c0a08]/10 border-t-[#0c0a08]" />
+                <p className="text-[15px] font-medium" style={{ color: SLATE }}>
+                  {t('about.schedule.loading')}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-12 overflow-x-auto pb-4 scrollbar-thin snap-x snap-mandatory">
+              <div className="flex gap-5 min-w-[1000px]">
+                {dates.map((date, dayIdx) => {
+                  const dateStr = toLocalDateString(date);
+                  const isToday = dayIdx === 0;
+                  const dateHeader = formatGridDate(date, locale);
+                  const dayOfWeekLabel = isToday 
+                    ? `${dateHeader} ${locale === 'id' ? '(Hari Ini)' : '(Today)'}` 
+                    : dateHeader;
+
+                  return (
+                    <div
+                      key={dateStr}
+                      className="flex-1 min-w-[180px] rounded-[12px] p-4 border border-[#d2cecb]/60 snap-align-start"
+                      style={{ backgroundColor: LIMESTONE }}
+                    >
+                      <div className="mb-4 pb-3 border-b border-[#d2cecb]/60 text-center">
+                        <span className="block text-[14px] font-bold" style={{ color: OBSIDIAN }}>
+                          {dayOfWeekLabel}
+                        </span>
+                      </div>
+
+                      <div className="space-y-3">
+                        {BOOKING_PRICE_SLOTS.map((slot) => {
+                          const isBooked = isSlotBooked(dateStr, slot.startHour, slot.endHour);
+                          const { total: slotPrice } = calculateBookingPrice(date, slot.startHour, slot.endHour);
+
+                          if (isBooked) {
+                            return (
+                              <div
+                                key={`${slot.startHour}-${slot.endHour}`}
+                                className="flex flex-col items-start gap-1 rounded-[8px] border border-[#d2cecb]/40 p-3 select-none"
+                                style={{ backgroundColor: '#e2e0de', color: '#999ba3' }}
+                              >
+                                <div className="flex w-full items-center justify-between">
+                                  <span className="text-[13px] font-medium">
+                                    {fmtHour(slot.startHour)} – {fmtHour(slot.endHour)}
+                                  </span>
+                                  <Minus size={14} className="text-[#999ba3]" />
+                                </div>
+                                <span className="text-[12px] font-medium uppercase tracking-wide opacity-80">
+                                  {t('about.schedule.booked')}
+                                </span>
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <Link
+                              key={`${slot.startHour}-${slot.endHour}`}
+                              href={`/customer/booking/create?date=${dateStr}&start=${slot.startHour}&end=${slot.endHour}`}
+                              className="flex flex-col items-start gap-1 rounded-[8px] border border-emerald-500/20 bg-white p-3 hover:border-emerald-500 hover:shadow-sm transition duration-200"
+                            >
+                              <div className="flex w-full items-center justify-between">
+                                <span className="text-[13px] font-semibold text-[#0c0a08]">
+                                  {fmtHour(slot.startHour)} – {fmtHour(slot.endHour)}
+                                </span>
+                                <Plus size={14} className="text-emerald-600" />
+                              </div>
+                              <span className="text-[12px] font-medium text-emerald-700">
+                                {fmtPrice(slotPrice)}
+                              </span>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ============ LOCATION / MAPS ============ */}
+      <section id="location" className="px-6 py-20 lg:py-24 border-t border-[#d2cecb]/20" style={{ backgroundColor: LIMESTONE }}>
+        <div className="mx-auto max-w-[1200px]">
+          <div className="scroll-reveal" style={motionDelay(0, 120)}>
+            <Eyebrow>{t('about.schedule.eyebrow')}</Eyebrow>
+          </div>
+          <h2 className="scroll-reveal mt-5 text-[34px] font-normal leading-[1.1] tracking-tight sm:text-[44px]" style={motionDelay(1, 120)}>
+            {t('about.schedule.mapTitle')}
+          </h2>
+          <p className="scroll-reveal mt-4 max-w-2xl text-[17px] leading-relaxed" style={{ ...motionDelay(2, 120), color: SLATE }}>
+            {t('about.schedule.mapSubtitle')}
+          </p>
+
+          <div className="scroll-reveal mt-12 overflow-hidden rounded-[12px] border border-[#d2cecb] shadow-[0_20px_55px_rgba(12,10,8,0.06)] bg-white" style={{ ...motionDelay(3, 120), height: '450px' }}>
+            <HAMMapWrapper />
           </div>
         </div>
       </section>

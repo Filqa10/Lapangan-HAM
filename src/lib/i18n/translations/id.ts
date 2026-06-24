@@ -281,6 +281,16 @@ const id: Record<string, string> = {
   'about.cta.title': 'Siap mengamankan slot Anda?',
   'about.cta.subtitle': 'Pilih tanggal, transfer uang muka, dan lacak verifikasi langsung dari portal pelanggan Anda.',
 
+  // Schedule Grid & Map
+  'about.schedule.eyebrow': 'Jadwal',
+  'about.schedule.title': 'Ketersediaan Lapangan 5 Hari Ke Depan',
+  'about.schedule.subtitle': 'Pantau ketersediaan slot lapangan secara langsung. Pilih slot kosong untuk langsung melakukan booking.',
+  'about.schedule.booked': 'Sudah Dipesan',
+  'about.schedule.available': 'Tersedia',
+  'about.schedule.loading': 'Memuat jadwal...',
+  'about.schedule.mapTitle': 'Lokasi Stadion HAM',
+  'about.schedule.mapSubtitle': 'Stadion H. Abdul Malik berlokasi strategis dan mudah diakses di wilayah Jawa Timur.',
+
   // Auth Layout Left Panel
   'auth.panel.appName': 'Stadion HAM',
   'auth.panel.tagline': 'Dikembangkan oleh PH Stadion HAM',

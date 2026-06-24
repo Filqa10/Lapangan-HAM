@@ -56,6 +56,10 @@ export function BookingCreateForm({
   const [step, setStep] = useState(1);
   const [selectedDate, setSelectedDate] = useState<Date | null>(() => {
     if (initialDate) {
+      const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(initialDate);
+      if (match) {
+        return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+      }
       const parsed = new Date(initialDate);
       if (!isNaN(parsed.getTime())) return parsed;
     }
