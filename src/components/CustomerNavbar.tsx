@@ -34,7 +34,7 @@ export function CustomerNavbar({ userName }: CustomerNavbarProps) {
             alt="HAM Stadium Logo"
             width={130}
             height={130}
-            className="shrink-0 object-contain invert dark:invert-0"
+            className="h-10 w-auto shrink-0 object-contain invert dark:invert-0"
           />
         </Link>
 
