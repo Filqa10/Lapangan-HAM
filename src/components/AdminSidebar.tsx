@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Calendar, Home, LogOut, MapPin } from 'lucide-react';
 
@@ -37,16 +38,26 @@ export function AdminSidebar({ isOpen, setIsOpen, isMobile }: AdminSidebarProps)
       {/* Sidebar Header */}
       {isOpen ? (
         <div className="flex flex-col gap-1 p-6">
-          <Link href="/admin" className="text-xl font-semibold tracking-tight text-[var(--text-primary)]">
-            {t('common.appName')}
+          <Link href="/admin" className="flex items-center gap-3">
+            <Image
+              src="/assets/Logo-HAM-fix.png"
+              alt="HAM Stadium Logo"
+              width={130}
+              height={130}
+              className="shrink-0 object-contain invert dark:invert-0"
+            />
+            <span className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider">{t('common.adminPanel')}</span>
           </Link>
-          <span className="text-xs font-medium text-[var(--text-muted)]">{t('common.adminPanel')}</span>
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center p-6 h-[76px] shrink-0">
-          <svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true">
-            <path d="M8 1 L15 14 L1 14 Z" fill="var(--accent-lime)" />
-          </svg>
+        <div className="flex flex-col items-center justify-center p-4 h-[76px] shrink-0">
+          <Image
+            src="/assets/Logo-HAM-fix.png"
+            alt="HAM Stadium Logo"
+            width={28}
+            height={28}
+            className="shrink-0 object-contain invert dark:invert-0"
+          />
         </div>
       )}
 
