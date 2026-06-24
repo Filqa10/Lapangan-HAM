@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo, type ReactNode } from 'react';
-import { ChevronDown, ChevronUp, Search } from 'lucide-react';
+import { useState, useMemo, type ReactNode, Fragment } from 'react';
+import { ChevronDown, ChevronUp, Search, ChevronRight } from 'lucide-react';
 
 import { useTranslation } from '@/lib/i18n';
 
@@ -17,15 +17,29 @@ type DataTableProps<T> = {
   columns: Column<T>[];
   data: T[];
   keyExtractor: (row: T) => string | number;
+  expandableRender?: (row: T) => ReactNode;
 };
 
-export function DataTable<T>({ columns, data, keyExtractor }: DataTableProps<T>) {
+export function DataTable<T>({ columns, data, keyExtractor, expandableRender }: DataTableProps<T>) {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [perPage, setPerPage] = useState(10);
   const [page, setPage] = useState(1);
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortAsc, setSortAsc] = useState(true);
+  const [expandedRows, setExpandedRows] = useState<Set<string | number>>(new Set());
+
+  const toggleRow = (id: string | number) => {
+    setExpandedRows((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
 
   const filteredData = useMemo(() => {
     if (!search.trim()) return data;
@@ -97,6 +111,7 @@ export function DataTable<T>({ columns, data, keyExtractor }: DataTableProps<T>)
         <table className="w-full min-w-[760px] text-sm">
           <thead>
             <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-body)]">
+              {expandableRender && <th className="w-10 px-4 py-3" />}
               {columns.map((col) => (
                 <th
                   key={col.key}
@@ -116,7 +131,7 @@ export function DataTable<T>({ columns, data, keyExtractor }: DataTableProps<T>)
           <tbody>
             {paginatedData.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="px-4 py-12 text-center">
+                <td colSpan={columns.length + (expandableRender ? 1 : 0)} className="px-4 py-12 text-center">
                   <div className="mx-auto max-w-xs">
                     <p className="text-sm font-medium text-[var(--text-primary)]">No records found</p>
                     <p className="mt-1 text-xs text-[var(--text-muted)]">
@@ -126,18 +141,43 @@ export function DataTable<T>({ columns, data, keyExtractor }: DataTableProps<T>)
                 </td>
               </tr>
             ) : (
-              paginatedData.map((row) => (
-                <tr
-                  key={keyExtractor(row)}
-                  className="border-b border-[var(--border-subtle)] last:border-0 transition-colors duration-150 hover:bg-[var(--bg-action-hover)]"
-                >
-                  {columns.map((col) => (
-                    <td key={col.key} className="px-4 py-3 align-middle">
-                      {col.render(row)}
-                    </td>
-                  ))}
-                </tr>
-              ))
+              paginatedData.map((row) => {
+                const rowId = keyExtractor(row);
+                const isExpanded = expandedRows.has(rowId);
+                return (
+                  <Fragment key={rowId}>
+                    <tr
+                      className="border-b border-[var(--border-subtle)] last:border-0 transition-colors duration-150 hover:bg-[var(--bg-action-hover)]"
+                    >
+                      {expandableRender && (
+                        <td className="w-10 px-4 py-3 align-middle">
+                          <button
+                            type="button"
+                            onClick={() => toggleRow(rowId)}
+                            className="flex h-6 w-6 items-center justify-center rounded-[4px] text-[var(--text-muted)] hover:bg-[var(--bg-action-hover)] hover:text-[var(--text-primary)] transition cursor-pointer"
+                          >
+                            {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                          </button>
+                        </td>
+                      )}
+                      {columns.map((col) => (
+                        <td key={col.key} className="px-4 py-3 align-middle">
+                          {col.render(row)}
+                        </td>
+                      ))}
+                    </tr>
+                    {expandableRender && isExpanded && (
+                      <tr className="bg-[var(--bg-body)]/20 border-b border-[var(--border-subtle)]">
+                        <td colSpan={columns.length + 1} className="p-0">
+                          <div className="px-6 py-4 bg-[var(--bg-body)]/10 border-l-2 border-[var(--text-primary)] animate-fade-in">
+                            {expandableRender(row)}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                );
+              })
             )}
           </tbody>
         </table>
