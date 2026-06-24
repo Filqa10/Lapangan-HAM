@@ -79,12 +79,6 @@ export function CustomerDashboardClient({ userName, stats, recentBookings, calen
               <Calendar size={16} />
               {t('dashboard.bookNow')}
             </Link>
-            <Link
-              href="/customer/history"
-              className="btn flex items-center justify-center gap-2 rounded-[4px] border border-white/20 bg-white/10 px-5 py-3 text-[15px] font-medium text-white backdrop-blur-sm transition duration-150 hover:bg-white/20 active:scale-[0.97]"
-            >
-              {t('dashboard.myProfile')}
-            </Link>
           </div>
         </div>
       </section>

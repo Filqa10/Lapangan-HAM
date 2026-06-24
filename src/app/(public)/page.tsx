@@ -197,11 +197,14 @@ export default function AboutPage() {
       {/* ============ NAV (transparent over dark hero) ============ */}
       <nav className="absolute top-0 z-50 w-full">
         <div className="mx-auto flex max-w-[1200px] items-center justify-between px-6 py-6">
-          <Link href="/" className="group flex items-center gap-2.5 transition-transform duration-300 ease-out hover:-translate-y-0.5">
-            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
-              <path d="M8 1 L15 14 L1 14 Z" fill={LIME} />
-            </svg>
-            <span className="text-[18px] font-medium tracking-tight text-white">HAM Stadium</span>
+          <Link href="/" className="group flex items-center transition-transform duration-300 ease-out hover:-translate-y-0.5">
+            <Image
+              src="/assets/Logo-HAM-fix.png"
+              alt="HAM Stadium Logo"
+              width={140}
+              height={140}
+              className="shrink-0 object-contain"
+            />
           </Link>
 
           <div className="hidden items-center gap-8 md:flex">
@@ -508,9 +511,13 @@ export default function AboutPage() {
       <footer className="px-6 py-12" style={{ backgroundColor: OBSIDIAN }}>
         <div className="mx-auto flex max-w-[1200px] flex-col items-center justify-between gap-6 sm:flex-row">
           <div className="flex items-center gap-2.5">
-            <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
-              <path d="M8 1 L15 14 L1 14 Z" fill={LIME} />
-            </svg>
+            <Image
+              src="/assets/Logo-HAM-fix.png"
+              alt="HAM Stadium Logo"
+              width={16}
+              height={16}
+              className="shrink-0 object-contain"
+            />
             <p className="text-[14px]" style={{ color: FOG }}>{t('about.footer.rights')}</p>
           </div>
           <div className="flex gap-6 text-[14px] font-medium">

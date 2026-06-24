@@ -166,7 +166,7 @@ export function BookingCreateForm({ fields }: { fields: FieldOption[] }) {
                   onChange={(e) => {
                     const nextStart = Number(e.target.value);
                     setStartHour(nextStart);
-                    if (endHour <= nextStart) setEndHour(nextStart + 2);
+                    setEndHour(nextStart + 2);
                   }}
                   className="w-full rounded-[4px] border border-[#d2cecb] dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 text-[15px] text-[#0c0a08] dark:text-white transition focus:border-slate-600 focus:ring-0"
                 >

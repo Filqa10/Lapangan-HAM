@@ -38,7 +38,7 @@ export function AdminSidebar({ isOpen, setIsOpen, isMobile }: AdminSidebarProps)
       {/* Sidebar Header */}
       {isOpen ? (
         <div className="flex flex-col gap-1 p-6">
-          <Link href="/admin" className="flex items-center gap-3">
+          <Link href="/admin" className="flex justify-center">
             <Image
               src="/assets/Logo-HAM-fix.png"
               alt="HAM Stadium Logo"
@@ -46,7 +46,6 @@ export function AdminSidebar({ isOpen, setIsOpen, isMobile }: AdminSidebarProps)
               height={130}
               className="shrink-0 object-contain invert dark:invert-0"
             />
-            <span className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider">{t('common.adminPanel')}</span>
           </Link>
         </div>
       ) : (

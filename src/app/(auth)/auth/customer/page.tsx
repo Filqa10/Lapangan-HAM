@@ -32,13 +32,14 @@ export default function CustomerLoginPage() {
         </div>
 
         {/* Brand Header */}
-        <Link href="/" className="flex items-center gap-3 relative z-10 stagger-item hover:opacity-90 transition-opacity">
-          <svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true">
-            <path d="M8 1 L15 14 L1 14 Z" fill="#e4f222" />
-          </svg>
-          <span className="text-[18px] font-medium tracking-tight text-white uppercase">
-            {t('auth.panel.appName')}
-          </span>
+        <Link href="/" className="relative z-10 stagger-item hover:opacity-90 transition-opacity">
+          <Image
+            src="/assets/Logo-HAM-fix.png"
+            alt="HAM Stadium Logo"
+            width={160}
+            height={160}
+            className="shrink-0 object-contain"
+          />
         </Link>
 
         {/* Content Statement & Footer */}

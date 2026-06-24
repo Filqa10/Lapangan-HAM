@@ -91,4 +91,22 @@ describe('BookingCreateForm', () => {
     expect(screen.getByText(/check history for dp verification/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /open history/i })).toHaveAttribute('href', '/customer/history');
   });
+
+  it('automatically sets end hour to start hour + 2 when start hour changes', () => {
+    useActionStateMock.mockReturnValue([{ ok: false }, vi.fn(), false]);
+    mockStorage();
+
+    renderForm();
+
+    const startTimeSelect = screen.getByLabelText(/start time/i) as HTMLSelectElement;
+    const endTimeSelect = screen.getByLabelText(/end time/i) as HTMLSelectElement;
+
+    expect(startTimeSelect.value).toBe('18');
+    expect(endTimeSelect.value).toBe('20');
+
+    fireEvent.change(startTimeSelect, { target: { value: '14' } });
+
+    expect(startTimeSelect.value).toBe('14');
+    expect(endTimeSelect.value).toBe('16');
+  });
 });

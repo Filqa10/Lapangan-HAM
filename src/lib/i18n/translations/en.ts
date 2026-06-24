@@ -171,6 +171,8 @@ const en: Record<string, string> = {
   'admin.last7Days': 'Last 7 Days Trend',
   'admin.last6Months': 'Last 6 Months Trend',
   'admin.thisMonthRevenue': "THIS MONTH'S REVENUE",
+  'admin.upcomingRevenue': 'UPCOMING REVENUE',
+  'admin.upcomingRevenueDetail': 'Total price from active bookings',
   'admin.date': 'DATE',
   'admin.revenue': 'REVENUE',
   'admin.monthCol': 'MONTH',

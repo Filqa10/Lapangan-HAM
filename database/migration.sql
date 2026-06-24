@@ -33,10 +33,14 @@ end$$;
 create table if not exists public.profiles (
   id          uuid primary key references auth.users on delete cascade,
   name        text not null,
+  email       text,
   phone       text,
   role        public.user_role not null default 'customer',
   created_at  timestamptz not null default timezone('utc'::text, now())
 );
+
+alter table public.profiles
+  add column if not exists email text;
 
 -- 2B. fields — bookable venues.
 create table if not exists public.fields (
@@ -98,16 +102,24 @@ security definer
 set search_path = ''
 as $$
 begin
-  insert into public.profiles (id, name, phone, role)
+  insert into public.profiles (id, name, email, phone, role)
   values (
     new.id,
     coalesce(new.raw_user_meta_data ->> 'name', 'User'),
+    new.email,
     new.raw_user_meta_data ->> 'phone',
     'customer'
   );
   return new;
 end;
 $$;
+
+update public.profiles as p
+set email = u.email
+from auth.users as u
+where p.id = u.id
+  and u.email is not null
+  and p.email is distinct from u.email;
 
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
@@ -297,7 +309,8 @@ create policy "payments_update_admin" on public.payments
 revoke execute on function public.handle_new_user() from anon, authenticated, public;
 revoke execute on function public.prevent_double_booking() from anon, authenticated, public;
 revoke execute on function public.set_updated_at() from anon, authenticated, public;
-revoke execute on function public.is_admin() from anon, authenticated, public;
+revoke execute on function public.is_admin() from anon, public;
+grant execute on function public.is_admin() to authenticated;
 
 -- -----------------------------------------------------------------------------
 -- 7. Concurrency-safe double-booking prevention (defense in depth)

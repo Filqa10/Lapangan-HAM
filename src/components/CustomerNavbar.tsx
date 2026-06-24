@@ -32,9 +32,9 @@ export function CustomerNavbar({ userName }: CustomerNavbarProps) {
           <Image
             src="/assets/Logo-HAM-fix.png"
             alt="HAM Stadium Logo"
-            width={130}
-            height={130}
-            className="h-10 w-auto shrink-0 object-contain invert dark:invert-0"
+            width={150}
+            height={150}
+            className="h-16 w-auto shrink-0 object-contain invert dark:invert-0"
           />
         </Link>
 
