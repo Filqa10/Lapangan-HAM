@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Calendar, ExternalLink, Filter, ReceiptText, Copy, Phone, Mail } from 'lucide-react';
+import { Calendar, ExternalLink, ReceiptText, Copy, Phone, Mail } from 'lucide-react';
 
 import { useTranslation } from '@/lib/i18n';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -308,19 +308,58 @@ export function AdminBookingsClient({
           </div>
         </div>
 
-        {/* Status filter */}
-        <div className="flex items-center gap-2 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] px-3 py-2">
-          <Filter size={15} className="text-[var(--text-muted)]" />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-[4px] border border-transparent bg-transparent px-1 py-1 text-sm text-[var(--text-primary)] focus:border-transparent focus:shadow-none"
+        {/* Status filter pills */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setStatusFilter('')}
+            className={`rounded-[4px] px-3 py-1.5 text-xs font-semibold border transition cursor-pointer ${
+              statusFilter === ''
+                ? 'bg-[var(--text-primary)] text-[var(--bg-card)] border-transparent'
+                : 'bg-[var(--bg-card)] text-[var(--text-secondary)] border-[var(--border-subtle)] hover:bg-[var(--bg-action-hover)]'
+            }`}
           >
-            <option value="">{t('common.allStatus')}</option>
-            {STATUS_OPTIONS.map((s) => (
-              <option key={s} value={s}>{t(`status.${s}`)}</option>
-            ))}
-          </select>
+            {t('common.allStatus')}
+          </button>
+          {STATUS_OPTIONS.map((s) => {
+            const isActive = statusFilter === s;
+            let activeStyle = '';
+            switch (s) {
+              case 'pending':
+                activeStyle = 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/50';
+                break;
+              case 'dp_paid':
+                activeStyle = 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border-cyan-500/50';
+                break;
+              case 'payment_2_pending':
+                activeStyle = 'bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/50';
+                break;
+              case 'paid':
+              case 'confirmed':
+                activeStyle = 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/50';
+                break;
+              case 'cancelled':
+                activeStyle = 'bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/50';
+                break;
+              default:
+                activeStyle = 'bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/50';
+            }
+
+            return (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setStatusFilter(s)}
+                className={`rounded-[4px] px-3 py-1.5 text-xs font-semibold border transition cursor-pointer ${
+                  isActive
+                    ? activeStyle
+                    : 'bg-[var(--bg-card)] text-[var(--text-secondary)] border-[var(--border-subtle)] hover:bg-[var(--bg-action-hover)]'
+                }`}
+              >
+                {t(`status.${s}`)}
+              </button>
+            );
+          })}
         </div>
       </div>
 
