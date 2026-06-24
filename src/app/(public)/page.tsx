@@ -307,9 +307,7 @@ export default function AboutPage() {
               alt="HAM Stadium Logo"
               width={140}
               height={140}
-              className={`shrink-0 object-contain invert transition-all duration-300 ${
-                scrolled ? 'h-11 md:h-12 w-auto' : 'h-16 md:h-20 w-auto'
-              }`}
+              className="shrink-0 object-contain invert"
             />
           </Link>
 
