@@ -59,6 +59,19 @@ export default function AboutPage() {
 
   const [bookings, setBookings] = useState<DBBooking[]>([]);
   const [loadingBookings, setLoadingBookings] = useState(true);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 20) {
+        setScrolled(true);
+      } else {
+        setScrolled(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const dates = useMemo(() => {
     return Array.from({ length: 5 }, (_, i) => {
@@ -281,44 +294,50 @@ export default function AboutPage() {
         }
       `}</style>
 
-      {/* ============ NAV (transparent over light hero) ============ */}
-      <nav className="absolute top-0 z-50 w-full">
-        <div className="mx-auto flex max-w-[1200px] items-center justify-between px-6 py-6">
+      {/* ============ NAV ============ */}
+      <nav className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ${
+        scrolled
+          ? 'bg-white/80 backdrop-blur-md border-b border-[#0c0a08]/10 py-3.5 shadow-xs'
+          : 'bg-transparent py-5'
+      }`}>
+        <div className="mx-auto flex max-w-[1200px] items-center justify-between px-6">
           <Link href="/" className="group flex items-center transition-transform duration-300 ease-out hover:-translate-y-0.5">
             <Image
               src="/assets/Logo-HAM-fix.png"
               alt="HAM Stadium Logo"
-              width={140}
-              height={140}
-              className="shrink-0 object-contain invert"
+              width={120}
+              height={120}
+              className={`shrink-0 object-contain invert transition-all duration-300 ${
+                scrolled ? 'h-9 md:h-10 w-auto' : 'h-11 md:h-12 w-auto'
+              }`}
             />
           </Link>
 
           <div className="hidden items-center gap-8 md:flex">
-            <a href="#facilities" className="relative text-[15px] text-[#4d505d] transition duration-300 after:absolute after:-bottom-1.5 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-[#0c0a08] after:transition-transform after:duration-300 hover:text-[#0c0a08] hover:after:scale-x-100">{t('about.nav.facilities')}</a>
-            <a href="#pricing" className="relative text-[15px] text-[#4d505d] transition duration-300 after:absolute after:-bottom-1.5 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-[#0c0a08] after:transition-transform after:duration-300 hover:text-[#0c0a08] hover:after:scale-x-100">{t('about.nav.pricing')}</a>
-            <a href="#gallery" className="relative text-[15px] text-[#4d505d] transition duration-300 after:absolute after:-bottom-1.5 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-[#0c0a08] after:transition-transform after:duration-300 hover:text-[#0c0a08] hover:after:scale-x-100">{t('about.nav.gallery')}</a>
-            <a href="#faq" className="relative text-[15px] text-[#4d505d] transition duration-300 after:absolute after:-bottom-1.5 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-[#0c0a08] after:transition-transform after:duration-300 hover:text-[#0c0a08] hover:after:scale-x-100">{t('about.nav.faq')}</a>
+            <a href="#facilities" className="relative text-[14px] font-medium text-[#4d505d] transition duration-200 after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-[#0c0a08] after:transition-transform after:duration-250 hover:text-[#0c0a08] hover:after:scale-x-100">{t('about.nav.facilities')}</a>
+            <a href="#pricing" className="relative text-[14px] font-medium text-[#4d505d] transition duration-200 after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-[#0c0a08] after:transition-transform after:duration-250 hover:text-[#0c0a08] hover:after:scale-x-100">{t('about.nav.pricing')}</a>
+            <a href="#gallery" className="relative text-[14px] font-medium text-[#4d505d] transition duration-200 after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-[#0c0a08] after:transition-transform after:duration-250 hover:text-[#0c0a08] hover:after:scale-x-100">{t('about.nav.gallery')}</a>
+            <a href="#faq" className="relative text-[14px] font-medium text-[#4d505d] transition duration-200 after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-[#0c0a08] after:transition-transform after:duration-250 hover:text-[#0c0a08] hover:after:scale-x-100">{t('about.nav.faq')}</a>
           </div>
 
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setLocale(locale === 'en' ? 'id' : 'en')}
-              className="rounded-[4px] border border-[#0c0a08]/20 px-2.5 py-1.5 text-[13px] font-medium uppercase tracking-wide text-[#4d505d] transition duration-300 hover:-translate-y-0.5 hover:border-[#0c0a08]/60 hover:text-[#0c0a08] active:translate-y-0 cursor-pointer"
+              className="px-2 py-1 text-[13px] font-semibold text-[#4d505d] hover:text-[#0c0a08] transition cursor-pointer"
               aria-label="Toggle language"
             >
               {locale === 'en' ? 'EN' : 'ID'}
             </button>
             <Link
               href="/auth/customer"
-              className="hidden rounded-[4px] px-2 py-1.5 text-[15px] font-medium text-[#4d505d] transition duration-300 hover:-translate-y-0.5 hover:text-[#0c0a08] active:translate-y-0 sm:block"
+              className="hidden px-2.5 py-1.5 text-[14px] font-semibold text-[#4d505d] transition duration-200 hover:text-[#0c0a08] sm:block"
             >
               {t('about.signIn')}
             </Link>
             <Link
               href="/auth/customer/register"
-              className="btn rounded-[4px] px-4 py-2 text-[15px] font-medium transition duration-300 hover:-translate-y-0.5 hover:opacity-90 active:translate-y-0 active:scale-[0.99]"
+              className="rounded-[4px] px-4 py-2 text-[14px] font-semibold transition duration-200 hover:bg-[#0c0a08]/90 active:scale-[0.98] cursor-pointer"
               style={{ backgroundColor: OBSIDIAN, color: PAPER }}
             >
               {t('about.register')}
