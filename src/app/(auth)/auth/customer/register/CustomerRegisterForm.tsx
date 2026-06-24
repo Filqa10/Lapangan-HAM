@@ -21,11 +21,6 @@ export function CustomerRegisterForm() {
           {state.error}
         </div>
       )}
-      {state?.success && (
-        <div className="rounded-[4px] bg-emerald-500/10 border border-emerald-500/20 px-4 py-3 text-sm text-emerald-500 font-medium">
-          {state.success}
-        </div>
-      )}
 
       <div>
         <label htmlFor="name" className="mb-1.5 block text-[13px] font-medium uppercase tracking-[0.02em] text-[#4d505d] dark:text-[#999ba3]">

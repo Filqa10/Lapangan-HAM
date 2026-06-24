@@ -16,7 +16,6 @@ export type LoginActionState = {
 
 export type RegisterActionState = {
   error?: string;
-  success?: string;
 };
 
 export async function loginAction(
@@ -86,15 +85,11 @@ export async function registerAction(
     return { error: error.message };
   }
 
-  // If a session was automatically established (email verification disabled)
-  if (data?.session) {
-    redirect('/customer');
+  if (!data?.session) {
+    return { error: 'Registrasi gagal, silakan coba lagi.' };
   }
 
-  // If email verification is enabled or user needs to log in manually
-  return { 
-    success: 'Registrasi berhasil! Silakan masuk menggunakan akun baru Anda.' 
-  };
+  redirect('/customer');
 }
 
 function resolveLoginRedirect(role: ProfileRole, nextPath: string) {

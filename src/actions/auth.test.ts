@@ -72,10 +72,10 @@ describe('loginAction', () => {
 });
 
 describe('registerAction', () => {
-  it('registers a user successfully and returns a success message', async () => {
+  it('registers a user successfully and redirects to /customer', async () => {
     const { registerAction } = await import('./auth');
     supabaseMock.authUserId = 'new-user-123';
-    supabaseMock.authSession = null; // Email confirmation needed
+    supabaseMock.authSession = { access_token: 'fake-token' };
 
     const formData = new FormData();
     formData.set('name', 'Budi');
@@ -83,8 +83,7 @@ describe('registerAction', () => {
     formData.set('email', 'budi@example.com');
     formData.set('password', 'securepass');
 
-    const result = await registerAction(undefined, formData);
-    expect(result).toEqual({ success: 'Registrasi berhasil! Silakan masuk menggunakan akun baru Anda.' });
+    await expect(registerAction(undefined, formData)).rejects.toMatchObject({ path: '/customer' });
     expect(supabaseMock.auth.signUp).toHaveBeenCalledWith({
       email: 'budi@example.com',
       password: 'securepass',
@@ -96,6 +95,21 @@ describe('registerAction', () => {
         },
       },
     });
+  });
+
+  it('returns an error when signUp succeeds but no session is established', async () => {
+    const { registerAction } = await import('./auth');
+    supabaseMock.authUserId = 'new-user-123';
+    supabaseMock.authSession = null;
+
+    const formData = new FormData();
+    formData.set('name', 'Budi');
+    formData.set('phone', '08123456');
+    formData.set('email', 'budi@example.com');
+    formData.set('password', 'securepass');
+
+    const result = await registerAction(undefined, formData);
+    expect(result).toEqual({ error: 'Registrasi gagal, silakan coba lagi.' });
   });
 
   it('fails when fields are missing', async () => {
