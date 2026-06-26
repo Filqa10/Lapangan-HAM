@@ -1,12 +1,23 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Sprout, Lightbulb, Users, Clock, ArrowRight } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import { Sprout, Lightbulb, Users, Clock, ArrowRight, Plus, Minus } from 'lucide-react';
 
 import { useTranslation } from '@/lib/i18n';
-import { BOOKING_PRICE_SLOTS } from '@/config/pricing';
+import { BOOKING_PRICE_SLOTS, calculateBookingPrice } from '@/config/pricing';
+import { createClient } from '@/lib/supabase/client';
+
+const HAMMapWrapper = dynamic(() => import('@/components/HAMMapWrapper'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full w-full items-center justify-center bg-[#f4f2f0]">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#0c0a08]/10 border-t-[#0c0a08]" />
+    </div>
+  ),
+});
 
 /* Ramp palette (DESIGN.md) */
 const PAPER = '#ffffff';
@@ -38,6 +49,82 @@ function Eyebrow({ children, onDark = false }: { children: React.ReactNode; onDa
 
 export default function AboutPage() {
   const { t, locale, setLocale } = useTranslation();
+
+  interface DBBooking {
+    booking_date: string;
+    start_time: string;
+    end_time: string;
+    status: string;
+  }
+
+  const [bookings, setBookings] = useState<DBBooking[]>([]);
+  const [loadingBookings, setLoadingBookings] = useState(true);
+
+  const dates = useMemo(() => {
+    return Array.from({ length: 5 }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+      return d;
+    });
+  }, []);
+
+  const toLocalDateString = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const formatGridDate = (date: Date, localeStr: string) => {
+    const l = localeStr === 'id' ? 'id-ID' : 'en-US';
+    const weekday = date.toLocaleDateString(l, { weekday: 'long' });
+    const day = date.getDate();
+    const month = date.toLocaleDateString(l, { month: 'short' });
+    return `${weekday}, ${day} ${month}`;
+  };
+
+  useEffect(() => {
+    async function fetchBookings() {
+      try {
+        const supabase = createClient();
+        const startDate = toLocalDateString(dates[0]);
+        const endDate = toLocalDateString(dates[4]);
+
+        const { data, error } = await supabase
+          .from('bookings')
+          .select('booking_date, start_time, end_time, status')
+          .neq('status', 'cancelled')
+          .gte('booking_date', startDate)
+          .lte('booking_date', endDate);
+
+        if (error) {
+          console.error('Error fetching bookings:', error);
+        } else if (data) {
+          setBookings(data as DBBooking[]);
+        }
+      } catch (err) {
+        console.error('Failed to fetch bookings:', err);
+      } finally {
+        setLoadingBookings(false);
+      }
+    }
+
+    fetchBookings();
+  }, [dates]);
+
+  const isSlotBooked = (dateStr: string, startHour: number, endHour: number) => {
+    return bookings.some(b => {
+      if (b.booking_date !== dateStr) return false;
+
+      const bStartHour = Number(b.start_time.split(':')[0]);
+      const bEndHour = Number(b.end_time.split(':')[0]);
+
+      const overlapStart = Math.max(startHour, bStartHour);
+      const overlapEnd = Math.min(endHour, bEndHour);
+
+      return overlapStart < overlapEnd;
+    });
+  };
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -194,7 +281,7 @@ export default function AboutPage() {
         }
       `}</style>
 
-      {/* ============ NAV (transparent over dark hero) ============ */}
+      {/* ============ NAV (transparent over light hero) ============ */}
       <nav className="absolute top-0 z-50 w-full">
         <div className="mx-auto flex max-w-[1200px] items-center justify-between px-6 py-6">
           <Link href="/" className="group flex items-center transition-transform duration-300 ease-out hover:-translate-y-0.5">
@@ -203,36 +290,36 @@ export default function AboutPage() {
               alt="HAM Stadium Logo"
               width={140}
               height={140}
-              className="shrink-0 object-contain"
+              className="shrink-0 object-contain invert"
             />
           </Link>
 
           <div className="hidden items-center gap-8 md:flex">
-            <a href="#facilities" className="relative text-[15px] text-white/70 transition duration-300 after:absolute after:-bottom-1.5 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-white/70 after:transition-transform after:duration-300 hover:text-white hover:after:scale-x-100">{t('about.nav.facilities')}</a>
-            <a href="#pricing" className="relative text-[15px] text-white/70 transition duration-300 after:absolute after:-bottom-1.5 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-white/70 after:transition-transform after:duration-300 hover:text-white hover:after:scale-x-100">{t('about.nav.pricing')}</a>
-            <a href="#gallery" className="relative text-[15px] text-white/70 transition duration-300 after:absolute after:-bottom-1.5 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-white/70 after:transition-transform after:duration-300 hover:text-white hover:after:scale-x-100">{t('about.nav.gallery')}</a>
-            <a href="#faq" className="relative text-[15px] text-white/70 transition duration-300 after:absolute after:-bottom-1.5 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-white/70 after:transition-transform after:duration-300 hover:text-white hover:after:scale-x-100">{t('about.nav.faq')}</a>
+            <a href="#facilities" className="relative text-[14px] font-medium text-[#4d505d] transition duration-200 after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-[#0c0a08] after:transition-transform after:duration-250 hover:text-[#0c0a08] hover:after:scale-x-100">{t('about.nav.facilities')}</a>
+            <a href="#pricing" className="relative text-[14px] font-medium text-[#4d505d] transition duration-200 after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-[#0c0a08] after:transition-transform after:duration-250 hover:text-[#0c0a08] hover:after:scale-x-100">{t('about.nav.pricing')}</a>
+            <a href="#gallery" className="relative text-[14px] font-medium text-[#4d505d] transition duration-200 after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-[#0c0a08] after:transition-transform after:duration-250 hover:text-[#0c0a08] hover:after:scale-x-100">{t('about.nav.gallery')}</a>
+            <a href="#faq" className="relative text-[14px] font-medium text-[#4d505d] transition duration-200 after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-[#0c0a08] after:transition-transform after:duration-250 hover:text-[#0c0a08] hover:after:scale-x-100">{t('about.nav.faq')}</a>
           </div>
 
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setLocale(locale === 'en' ? 'id' : 'en')}
-              className="rounded-[4px] border border-white/25 px-2.5 py-1.5 text-[13px] font-medium uppercase tracking-wide text-white/80 transition duration-300 hover:-translate-y-0.5 hover:border-white/60 hover:text-white active:translate-y-0"
+              className="px-2 py-1 text-[13px] font-semibold text-[#4d505d] hover:text-[#0c0a08] transition cursor-pointer"
               aria-label="Toggle language"
             >
               {locale === 'en' ? 'EN' : 'ID'}
             </button>
             <Link
               href="/auth/customer"
-              className="hidden rounded-[4px] px-2 py-1.5 text-[15px] font-medium text-white/80 transition duration-300 hover:-translate-y-0.5 hover:text-white active:translate-y-0 sm:block"
+              className="hidden px-2.5 py-1.5 text-[14px] font-semibold text-[#4d505d] transition duration-200 hover:text-[#0c0a08] sm:block"
             >
               {t('about.signIn')}
             </Link>
             <Link
               href="/auth/customer/register"
-              className="btn rounded-[4px] px-4 py-2 text-[15px] font-medium transition duration-300 hover:-translate-y-0.5 hover:opacity-90 active:translate-y-0 active:scale-[0.99]"
-              style={{ backgroundColor: PAPER, color: OBSIDIAN }}
+              className="rounded-[4px] px-4 py-2 text-[14px] font-semibold transition duration-200 hover:bg-[#0c0a08]/90 active:scale-[0.98] cursor-pointer"
+              style={{ backgroundColor: OBSIDIAN, color: PAPER }}
             >
               {t('about.register')}
             </Link>
@@ -240,42 +327,42 @@ export default function AboutPage() {
         </div>
       </nav>
 
-      {/* ============ HERO (dawn-lit dark gradient sky) ============ */}
+      {/* ============ HERO (light minimalist style) ============ */}
       <section
         className="relative overflow-hidden"
         style={{
-          background: `linear-gradient(165deg, ${OBSIDIAN} 0%, ${OBSIDIAN} 22%, #1d2740 52%, #3a548c 74%, #5683d2 88%, ${LIMESTONE} 100%)`,
+          backgroundColor: PAPER,
         }}
       >
         <div className="mx-auto grid max-w-[1200px] grid-cols-1 items-center gap-12 px-6 pt-36 pb-24 lg:grid-cols-12 lg:gap-10 lg:pt-44 lg:pb-28">
           {/* Text */}
           <div className="lg:col-span-6">
             <div className="about-motion-rise" style={motionDelay(0)}>
-              <Eyebrow onDark>{t('about.hero.badge')}</Eyebrow>
+              <Eyebrow>{t('about.hero.badge')}</Eyebrow>
             </div>
-            <h1 className="about-motion-rise mt-6 text-[44px] font-normal leading-[1.03] tracking-tight text-white sm:text-[58px] lg:text-[72px]" style={motionDelay(1)}>
+            <h1 className="about-motion-rise mt-6 text-[44px] font-normal leading-[1.03] tracking-tight text-[#0c0a08] sm:text-[58px] lg:text-[72px]" style={motionDelay(1)}>
               Stadion
               <br />
               H. Abdul Malik
             </h1>
-            <p className="about-motion-rise mt-7 max-w-xl text-[17px] leading-[1.55] text-white/70" style={motionDelay(2)}>
+            <p className="about-motion-rise mt-7 max-w-xl text-[17px] leading-[1.55] text-[#4d505d]" style={motionDelay(2)}>
               {t('landing.heroDescription')}
             </p>
             <div className="about-motion-rise mt-9 flex flex-col gap-3 sm:flex-row" style={motionDelay(3)}>
               <Link
                 href="/customer/booking/create"
-                className="btn group inline-flex items-center justify-center gap-2 rounded-[4px] px-5 py-3 text-[16px] font-medium shadow-[0_16px_50px_rgba(12,10,8,0.16)] transition duration-300 hover:-translate-y-0.5 hover:opacity-95 active:translate-y-0 active:scale-[0.99]"
-                style={{ backgroundColor: PAPER, color: OBSIDIAN }}
+                className="btn group inline-flex items-center justify-center gap-2 rounded-[4px] px-5 py-3 text-[16px] font-medium shadow-[0_16px_50px_rgba(12,10,8,0.06)] transition duration-300 hover:-translate-y-0.5 hover:opacity-95 active:translate-y-0 active:scale-[0.99]"
+                style={{ backgroundColor: LIME, color: OBSIDIAN }}
               >
                 {t('landing.bookNow')} <ArrowRight size={17} className="transition-transform duration-300 group-hover:translate-x-0.5" />
               </Link>
             </div>
-            <p className="about-motion-rise mt-7 text-[14px] text-white/55" style={motionDelay(4)}>{t('about.heroSub')}</p>
+            <p className="about-motion-rise mt-7 text-[14px] text-[#999ba3]" style={motionDelay(4)}>{t('about.heroSub')}</p>
           </div>
 
           {/* Image */}
           <div className="about-motion-rise lg:col-span-6" style={motionDelay(2, 160)}>
-            <div className="group relative aspect-[4/3] w-full overflow-hidden rounded-[12px] border border-white/10 shadow-[0_30px_90px_rgba(12,10,8,0.34)]">
+            <div className="group relative aspect-[4/3] w-full overflow-hidden rounded-[12px] border border-[#d2cecb] shadow-[0_30px_90px_rgba(12,10,8,0.08)]">
               <Image
                 src="/assets/Stadion HAM side view.png"
                 alt="HAM Stadium side view"
@@ -284,7 +371,7 @@ export default function AboutPage() {
                 className="about-motion-image object-cover object-center transition duration-700 group-hover:scale-[1.025]"
                 priority
               />
-              <div className="about-motion-wipe pointer-events-none absolute inset-0" style={{ backgroundColor: OBSIDIAN }} />
+              <div className="about-motion-wipe pointer-events-none absolute inset-0" style={{ backgroundColor: LIMESTONE }} />
             </div>
           </div>
         </div>
@@ -450,6 +537,123 @@ export default function AboutPage() {
                 </p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============ SCHEDULE — dynamic availability grid ============ */}
+      <section id="schedule" className="px-6 py-20 lg:py-24 border-t border-[#d2cecb]/20" style={{ backgroundColor: PAPER }}>
+        <div className="mx-auto max-w-[1200px]">
+          <div className="scroll-reveal" style={motionDelay(0, 120)}>
+            <Eyebrow>{t('about.schedule.eyebrow')}</Eyebrow>
+          </div>
+          <h2 className="scroll-reveal mt-5 text-[34px] font-normal leading-[1.1] tracking-tight sm:text-[44px]" style={motionDelay(1, 120)}>
+            {t('about.schedule.title')}
+          </h2>
+          <p className="scroll-reveal mt-4 max-w-2xl text-[17px] leading-relaxed" style={{ ...motionDelay(2, 120), color: SLATE }}>
+            {t('about.schedule.subtitle')}
+          </p>
+
+          {loadingBookings ? (
+            <div className="mt-12 flex h-60 items-center justify-center rounded-[12px] border border-dashed border-[#d2cecb]" style={{ backgroundColor: LIMESTONE }}>
+              <div className="flex flex-col items-center gap-3">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#0c0a08]/10 border-t-[#0c0a08]" />
+                <p className="text-[15px] font-medium" style={{ color: SLATE }}>
+                  {t('about.schedule.loading')}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-12 overflow-x-auto pb-4 scrollbar-thin snap-x snap-mandatory">
+              <div className="flex gap-5 min-w-[1000px]">
+                {dates.map((date, dayIdx) => {
+                  const dateStr = toLocalDateString(date);
+                  const isToday = dayIdx === 0;
+                  const dateHeader = formatGridDate(date, locale);
+                  const dayOfWeekLabel = isToday 
+                    ? `${dateHeader} ${locale === 'id' ? '(Hari Ini)' : '(Today)'}` 
+                    : dateHeader;
+
+                  return (
+                    <div
+                      key={dateStr}
+                      className="flex-1 min-w-[180px] rounded-[12px] p-4 border border-[#d2cecb]/60 snap-align-start"
+                      style={{ backgroundColor: LIMESTONE }}
+                    >
+                      <div className="mb-4 pb-3 border-b border-[#d2cecb]/60 text-center">
+                        <span className="block text-[14px] font-bold" style={{ color: OBSIDIAN }}>
+                          {dayOfWeekLabel}
+                        </span>
+                      </div>
+
+                      <div className="space-y-3">
+                        {BOOKING_PRICE_SLOTS.map((slot) => {
+                          const isBooked = isSlotBooked(dateStr, slot.startHour, slot.endHour);
+                          const { total: slotPrice } = calculateBookingPrice(date, slot.startHour, slot.endHour);
+
+                          if (isBooked) {
+                            return (
+                              <div
+                                key={`${slot.startHour}-${slot.endHour}`}
+                                className="flex flex-col items-start gap-1 rounded-[8px] border border-[#d2cecb]/40 p-3 select-none"
+                                style={{ backgroundColor: '#e2e0de', color: '#999ba3' }}
+                              >
+                                <div className="flex w-full items-center justify-between">
+                                  <span className="text-[13px] font-medium">
+                                    {fmtHour(slot.startHour)} – {fmtHour(slot.endHour)}
+                                  </span>
+                                  <Minus size={14} className="text-[#999ba3]" />
+                                </div>
+                                <span className="text-[12px] font-medium uppercase tracking-wide opacity-80">
+                                  {t('about.schedule.booked')}
+                                </span>
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <Link
+                              key={`${slot.startHour}-${slot.endHour}`}
+                              href={`/customer/booking/create?date=${dateStr}&start=${slot.startHour}&end=${slot.endHour}`}
+                              className="flex flex-col items-start gap-1 rounded-[8px] border border-emerald-500/20 bg-white p-3 hover:border-emerald-500 hover:shadow-sm transition duration-200"
+                            >
+                              <div className="flex w-full items-center justify-between">
+                                <span className="text-[13px] font-semibold text-[#0c0a08]">
+                                  {fmtHour(slot.startHour)} – {fmtHour(slot.endHour)}
+                                </span>
+                                <Plus size={14} className="text-emerald-600" />
+                              </div>
+                              <span className="text-[12px] font-medium text-emerald-700">
+                                {fmtPrice(slotPrice)}
+                              </span>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ============ LOCATION / MAPS ============ */}
+      <section id="location" className="px-6 py-20 lg:py-24 border-t border-[#d2cecb]/20" style={{ backgroundColor: LIMESTONE }}>
+        <div className="mx-auto max-w-[1200px]">
+          <div className="scroll-reveal" style={motionDelay(0, 120)}>
+            <Eyebrow>{t('about.schedule.eyebrow')}</Eyebrow>
+          </div>
+          <h2 className="scroll-reveal mt-5 text-[34px] font-normal leading-[1.1] tracking-tight sm:text-[44px]" style={motionDelay(1, 120)}>
+            {t('about.schedule.mapTitle')}
+          </h2>
+          <p className="scroll-reveal mt-4 max-w-2xl text-[17px] leading-relaxed" style={{ ...motionDelay(2, 120), color: SLATE }}>
+            {t('about.schedule.mapSubtitle')}
+          </p>
+
+          <div className="scroll-reveal mt-12 overflow-hidden rounded-[12px] border border-[#d2cecb] shadow-[0_20px_55px_rgba(12,10,8,0.06)] bg-white" style={{ ...motionDelay(3, 120), height: '450px' }}>
+            <HAMMapWrapper />
           </div>
         </div>
       </section>

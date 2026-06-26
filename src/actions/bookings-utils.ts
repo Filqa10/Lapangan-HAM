@@ -34,6 +34,7 @@ export function parseCreateBookingForm(formData: FormData): ParseResult<ParsedCr
   const startHour = Number(formData.get('startHour'));
   const endHour = Number(formData.get('endHour'));
   const paymentProof = formData.get('paymentProof');
+  const paymentOption = String(formData.get('paymentOption') ?? 'dp');
 
   if (!Number.isInteger(fieldId) || fieldId <= 0) {
     return { ok: false, error: 'Pilih lapangan terlebih dahulu.' };
@@ -48,15 +49,18 @@ export function parseCreateBookingForm(formData: FormData): ParseResult<ParsedCr
     return { ok: false, error: 'Pilih jam mulai dan selesai yang valid.' };
   }
 
-  const proof = validatePaymentProofFile(paymentProof, 'Unggah bukti pembayaran DP terlebih dahulu.');
+  const proof = validatePaymentProofFile(paymentProof, 'Unggah bukti pembayaran terlebih dahulu.');
   if (!proof.ok) {
     return { ok: false, error: proof.error };
   }
 
-  const { total, dp } = calculateBookingPrice(date, startHour, endHour);
+  const { total, dp: calculatedDp } = calculateBookingPrice(date, startHour, endHour);
   if (total <= 0) {
     return { ok: false, error: 'Slot yang dipilih belum tersedia untuk booking online.' };
   }
+
+  // Adjust DP amount depending on payment option choice
+  const dp = paymentOption === 'full' ? total : calculatedDp;
 
   return {
     ok: true,

@@ -36,7 +36,17 @@ function formatLocalDate(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
-export function BookingCreateForm({ fields }: { fields: FieldOption[] }) {
+export function BookingCreateForm({
+  fields,
+  initialDate = '',
+  initialStart = 18,
+  initialEnd = 20,
+}: {
+  fields: FieldOption[];
+  initialDate?: string;
+  initialStart?: number;
+  initialEnd?: number;
+}) {
   const { t } = useTranslation();
   const [state, formAction, isPending] = useActionState(
     createBookingAction,
@@ -44,10 +54,21 @@ export function BookingCreateForm({ fields }: { fields: FieldOption[] }) {
   );
 
   const [step, setStep] = useState(1);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [fieldId, setFieldId] = useState(fields[0]?.id ? String(fields[0].id) : '');
-  const [startHour, setStartHour] = useState(18);
-  const [endHour, setEndHour] = useState(20);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(() => {
+    if (initialDate) {
+      const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(initialDate);
+      if (match) {
+        return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+      }
+      const parsed = new Date(initialDate);
+      if (!isNaN(parsed.getTime())) return parsed;
+    }
+    return null;
+  });
+  const [fieldId] = useState(fields[0]?.id ? String(fields[0].id) : '');
+  const [startHour, setStartHour] = useState(initialStart);
+  const [endHour, setEndHour] = useState(initialEnd);
+  const [paymentOption, setPaymentOption] = useState<'dp' | 'full'>('dp');
 
   const selectedField = fields.find((f) => String(f.id) === fieldId);
   const bookingDate = selectedDate ? formatLocalDate(selectedDate) : '';
@@ -116,27 +137,6 @@ export function BookingCreateForm({ fields }: { fields: FieldOption[] }) {
               <span className="text-[12px] font-medium uppercase tracking-[0.02em]">{t('booking.step')} 1: {t('booking.step1Title')}</span>
             </div>
             <p className="text-[13px] text-[#999ba3] leading-relaxed">{t('booking.step1Subtitle')}</p>
-
-            {/* Field selector */}
-            <div>
-              <label htmlFor="field-select" className="mb-1.5 block text-[13px] font-medium uppercase tracking-[0.02em] text-[#4d505d] dark:text-slate-300">
-                {t('booking.field')}
-              </label>
-              <select
-                id="field-select"
-                value={fieldId}
-                onChange={(e) => setFieldId(e.target.value)}
-                className="w-full rounded-[4px] border border-[#d2cecb] dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 text-[15px] text-[#0c0a08] dark:text-white transition focus:border-slate-600 focus:ring-0"
-                required
-              >
-                {fields.length === 0 ? <option value="">{t('booking.noActiveFields')}</option> : null}
-                {fields.map((field) => (
-                  <option key={field.id} value={field.id}>
-                    {field.name}{field.address ? ` - ${field.address}` : ''}
-                  </option>
-                ))}
-              </select>
-            </div>
 
             {/* Date picker */}
             <div>
@@ -254,6 +254,40 @@ export function BookingCreateForm({ fields }: { fields: FieldOption[] }) {
                 {/* Bank info */}
                 <BankInfoCard />
 
+                {/* Pilih Metode Pembayaran */}
+                <div className="space-y-3">
+                  <label className="block text-[13px] font-medium uppercase tracking-[0.02em] text-[#4d505d] dark:text-slate-300">
+                    Pilih Opsi Pembayaran
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setPaymentOption('dp')}
+                      className={`rounded-[4px] border p-3.5 text-left transition duration-150 cursor-pointer ${
+                        paymentOption === 'dp'
+                          ? 'border-[#e4f222] bg-[#e4f222]/10 text-[#0c0a08] dark:text-white'
+                          : 'border-[#d2cecb] dark:border-slate-800 bg-transparent text-[#999ba3] hover:border-[#999ba3]/40'
+                      }`}
+                    >
+                      <p className="text-sm font-semibold">Bayar DP 30%</p>
+                      <p className="mt-1 text-xs">{money.format(price.dp)}</p>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentOption('full')}
+                      className={`rounded-[4px] border p-3.5 text-left transition duration-150 cursor-pointer ${
+                        paymentOption === 'full'
+                          ? 'border-[#e4f222] bg-[#e4f222]/10 text-[#0c0a08] dark:text-white'
+                          : 'border-[#d2cecb] dark:border-slate-800 bg-transparent text-[#999ba3] hover:border-[#999ba3]/40'
+                      }`}
+                    >
+                      <p className="text-sm font-semibold">Bayar Lunas</p>
+                      <p className="mt-1 text-xs">{money.format(price.total)}</p>
+                    </button>
+                  </div>
+                  <input type="hidden" name="paymentOption" value={paymentOption} />
+                </div>
+
                 {/* Upload guide - Limestone desaturated card */}
                 <div className="rounded-[4px] border border-[#d2cecb] dark:border-slate-800 bg-[#f4f2f0] dark:bg-slate-900/60 p-4">
                   <div className="flex items-start gap-2.5">
@@ -268,7 +302,7 @@ export function BookingCreateForm({ fields }: { fields: FieldOption[] }) {
                 {/* Upload zone */}
                 <div>
                   <label className="mb-1.5 block text-[13px] font-medium uppercase tracking-[0.02em] text-[#4d505d] dark:text-slate-300">
-                    {t('booking.paymentProof')}
+                    {paymentOption === 'full' ? 'Bukti Pembayaran Lunas' : 'Bukti Pembayaran DP'}
                   </label>
                   <UploadZone name="paymentProof" required />
                 </div>
@@ -280,10 +314,19 @@ export function BookingCreateForm({ fields }: { fields: FieldOption[] }) {
                     <span className="font-medium text-[#0c0a08] dark:text-white">{money.format(price.total)}</span>
                   </div>
                   <div className="flex justify-between text-[14px] items-center">
-                    <span className="text-[#999ba3]">{t('booking.dpAmount')}</span>
-                    <span className="font-semibold text-lg text-emerald-500">{money.format(price.dp)}</span>
+                    <span className="text-[#999ba3]">
+                      {paymentOption === 'full' ? 'Jumlah Pembayaran' : t('booking.dpAmount')}
+                    </span>
+                    <span className="font-semibold text-lg text-emerald-500">
+                      {money.format(paymentOption === 'full' ? price.total : price.dp)}
+                    </span>
                   </div>
-                  <p className="text-[11px] text-[#999ba3] leading-normal">{t('booking.dpRequired')}</p>
+                  <div className="flex justify-between text-[14px]">
+                    <span className="text-[#999ba3]">{t('booking.remaining') || 'Sisa Pembayaran'}</span>
+                    <span className="font-medium text-[#0c0a08] dark:text-white">
+                      {money.format(paymentOption === 'full' ? 0 : price.total - price.dp)}
+                    </span>
+                  </div>
                 </div>
 
                 {state.error && (

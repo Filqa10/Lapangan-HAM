@@ -281,6 +281,16 @@ const en: Record<string, string> = {
   'about.cta.title': 'Ready to claim your slot?',
   'about.cta.subtitle': 'Pick a date, transfer your down payment, and track verification straight from your customer portal.',
 
+  // Schedule Grid & Map
+  'about.schedule.eyebrow': 'Schedule',
+  'about.schedule.title': 'Field Availability for the Next 5 Days',
+  'about.schedule.subtitle': 'Track live slot availability on our field. Select an empty slot to book instantly.',
+  'about.schedule.booked': 'Booked',
+  'about.schedule.available': 'Available',
+  'about.schedule.loading': 'Loading schedule...',
+  'about.schedule.mapTitle': 'HAM Stadium Location',
+  'about.schedule.mapSubtitle': 'Stadion H. Abdul Malik is strategically located and easily accessible.',
+
   // Auth Layout Left Panel
   'auth.panel.appName': 'HAM Stadium',
   'auth.panel.tagline': 'Developed by PH HAM Stadium',
