@@ -61,9 +61,14 @@ export async function createBookingAction(
     .single();
 
   if (bookingError || !insertedBooking) {
+    const isConflict =
+      bookingError?.message.includes('DoubleBookingException') ||
+      bookingError?.message.includes('bookings_no_overlap') ||
+      bookingError?.code === '23P01';
+
     return {
       ok: false,
-      error: bookingError?.message.includes('DoubleBookingException')
+      error: isConflict
         ? 'Slot ini sudah dipesan pelanggan lain. Pilih jam lain.'
         : 'Booking belum bisa dibuat. Coba lagi beberapa saat lagi.',
     };
