@@ -195,6 +195,11 @@ const en: Record<string, string> = {
   'admin.confirmPaid': 'Confirm Paid',
   'admin.cancelBooking': 'Cancel',
   'admin.verifyPayments': 'Verify Payments',
+  'admin.pendingBannerDesc': 'Review payment proofs to confirm or decline bookings.',
+  'admin.allClearTitle': 'All payments verified',
+  'admin.allClearDesc': "You're all caught up — new submissions will show up here.",
+  'admin.overview': 'Operations overview',
+  'admin.revenueTrend': 'Revenue',
 
   // Admin Fields
   'admin.manageFields': 'Manage Fields',

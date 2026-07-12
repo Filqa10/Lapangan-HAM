@@ -2,9 +2,33 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Calendar, CheckCircle2, Landmark, LayoutGrid, TrendingUp } from 'lucide-react';
+import { ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Bar, BarChart, CartesianGrid, XAxis } from 'recharts';
 
+import { cn } from '@/lib/utils';
 import { useTranslation } from '@/lib/i18n';
+import { Button } from '@/components/ui/button';
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from '@/components/ui/chart';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 type BookingRow = {
   id: number;
@@ -45,91 +69,11 @@ type Props = {
   payments: PaymentRow[];
 };
 
-type MetricTileProps = {
-  label: string;
-  value: string | number;
-  detail?: string;
-  icon: React.ElementType;
-  tone?: 'default' | 'attention' | 'success';
-};
-
 const money = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 });
 
-function MetricTile({ label, value, detail, icon: Icon, tone = 'default' }: MetricTileProps) {
-  const toneClass = {
-    default: 'bg-[var(--bg-card)] text-[var(--text-primary)]',
-    attention: 'bg-[#0c0a08] text-white dark:bg-[#e4f222] dark:text-[#0c0a08]',
-    success: 'bg-[var(--bg-card)] text-[var(--text-primary)]',
-  }[tone];
-  const iconClass = tone === 'attention'
-    ? 'bg-white/10 text-white dark:bg-[#0c0a08]/10 dark:text-[#0c0a08]'
-    : tone === 'success'
-      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-      : 'bg-[var(--bg-body)] text-[var(--text-secondary)]';
-  const mutedClass = tone === 'attention' ? 'text-white/70 dark:text-[#0c0a08]/70' : 'text-[var(--text-muted)]';
-
-  return (
-    <article className={`stagger-item rounded-xl border border-[var(--border-subtle)] p-5 transition-transform duration-150 active:scale-[0.98] ${toneClass}`}>
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className={`text-[11px] font-medium uppercase tracking-[0.02em] ${mutedClass}`}>{label}</p>
-          <p className="mt-3 text-3xl font-semibold tracking-tight">{value}</p>
-        </div>
-        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[4px] ${iconClass}`}>
-          <Icon size={18} />
-        </span>
-      </div>
-      {detail ? <p className={`mt-4 text-xs ${mutedClass}`}>{detail}</p> : null}
-    </article>
-  );
-}
-
-function TrendTable({
-  title,
-  label,
-  rows,
-}: {
-  title: string;
-  label: string;
-  rows: { date?: string; month?: string; revenue: number }[];
-}) {
-  return (
-    <section className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-5">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold text-[var(--text-primary)] uppercase tracking-[0.02em]">{title}</h2>
-        <TrendingUp size={16} className="text-[var(--text-muted)]" />
-      </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm text-left">
-          <thead>
-            <tr className="border-b border-[var(--border-subtle)]">
-              <th className="pb-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">{label}</th>
-              <th className="pb-3 text-right text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">Revenue</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[var(--border-subtle)]/50">
-            {rows.length === 0 ? (
-              <tr>
-                <td colSpan={2} className="py-8 text-center text-sm text-[var(--text-muted)]">
-                  No revenue data yet.
-                </td>
-              </tr>
-            ) : (
-              rows.map((row) => (
-                <tr key={row.date ?? row.month} className="hover:bg-black/[0.01] dark:hover:bg-white/[0.01]">
-                  <td className="py-3 font-medium text-[var(--text-secondary)]">{row.date ?? row.month}</td>
-                  <td className="py-3 text-right font-semibold text-[var(--text-primary)]" suppressHydrationWarning>
-                    {money.format(row.revenue)}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-    </section>
-  );
-}
+const chartConfig = {
+  revenue: { label: 'Revenue', color: 'var(--chart-1)' },
+} satisfies ChartConfig;
 
 export function AdminDashboardClient({ fields, bookings, payments }: Props) {
   const { t, locale } = useTranslation();
@@ -171,6 +115,11 @@ export function AdminDashboardClient({ fields, bookings, payments }: Props) {
   const last7Days = buildDailyRevenue(approvedPayments, 7);
   const last6Months = buildMonthlyRevenue(approvedPayments, 6);
 
+  // Chart wants chronological order (oldest -> newest) and a compact day label.
+  const dailyChart = [...last7Days]
+    .reverse()
+    .map((row) => ({ date: row.date.slice(0, 5), revenue: row.revenue }));
+
   const todayLabel = new Date().toLocaleDateString(locale === 'id' ? 'id-ID' : 'en-US', {
     day: 'numeric',
     month: 'short',
@@ -187,76 +136,182 @@ export function AdminDashboardClient({ fields, bookings, payments }: Props) {
       ? t('admin.active')
       : t('admin.inactive') || 'Inactive';
 
+  const kpis = [
+    { label: t('admin.fields'), value: activeFieldLabel, caption: t('admin.active') },
+    { label: t('admin.totalBookingCount'), value: String(totalBookingCount), caption: 'All recent bookings' },
+    { label: t('admin.dpRevenue'), value: money.format(dpRevenue), caption: 'Approved payment total' },
+    { label: t('admin.confirmedPaid'), value: String(confirmedCount), caption: 'Ready or completed' },
+  ];
+
   return (
     <div className="space-y-6 lg:space-y-8">
       {/* Header */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-[0.02em]">{t('admin.controlRoom')}</p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-[var(--text-primary)]">{t('admin.dashboardTitle')}</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
+          <h1 className="text-3xl font-semibold tracking-tight">{t('admin.dashboardTitle')}</h1>
+          <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
             Keep verification work visible, monitor field availability, and track approved payment revenue.
           </p>
         </div>
         <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
-          <select
-            value={selectedFieldId}
-            onChange={(e) => setSelectedFieldId(e.target.value)}
-            className="rounded-[4px] border border-[var(--border-subtle)] bg-[var(--bg-card)] px-3 py-2 text-sm font-medium text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-lime)]"
-          >
-            <option value="all">All Fields</option>
-            {fields.map((field) => (
-              <option key={field.id} value={String(field.id)}>
-                {field.name}
-              </option>
-            ))}
-          </select>
-          <Link href="/admin/fields" className="btn inline-flex items-center justify-center rounded-[4px] border border-[var(--border-subtle)] bg-[var(--bg-card)] px-4 py-2 text-sm font-medium text-[var(--text-secondary)] transition hover:bg-[var(--bg-action-hover)] hover:text-[var(--text-primary)] active:scale-[0.97]">
-            {t('admin.fields')}
-          </Link>
+          <Select value={selectedFieldId} onValueChange={setSelectedFieldId}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Fields</SelectItem>
+              {fields.map((field) => (
+                <SelectItem key={field.id} value={String(field.id)}>
+                  {field.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button asChild variant="outline">
+            <Link href="/admin/fields">{t('admin.fields')}</Link>
+          </Button>
         </div>
       </div>
 
-      {/* Bird's-Eye View Metrics at the TOP */}
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4" id="admin-stats">
-        <MetricTile label={t('admin.fields')} value={activeFieldLabel} detail={t('admin.active')} icon={LayoutGrid} />
-        <MetricTile label={t('admin.totalBookingCount')} value={totalBookingCount} detail="All recent bookings" icon={Calendar} />
-        <MetricTile label={t('admin.dpRevenue')} value={money.format(dpRevenue)} detail="Approved payment total" icon={Landmark} />
-        <MetricTile label={t('admin.confirmedPaid')} value={confirmedCount} detail="Ready or completed slots" icon={CheckCircle2} tone="success" />
-      </div>
-
-      {/* Primary Operations Grid (Action items & Revenue Summary) */}
-      <section className="grid gap-5 lg:grid-cols-[1.3fr_0.9fr]">
-        {/* Pending Actions */}
-        <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-5 flex flex-col justify-between">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      {/* Pending verification — focused action banner */}
+      {pendingCount > 0 ? (
+        <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+          <div className="flex items-center gap-3.5">
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-lime)] text-xl font-semibold tabular-nums text-[#0c0a08]">
+              {pendingCount}
+            </span>
             <div>
-              <p className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-[0.02em]">{t('admin.pendingVerification')}</p>
-              <p className="mt-2 text-5xl font-semibold tracking-tight text-[var(--text-primary)]">{pendingCount}</p>
+              <p className="font-medium">{t('admin.pendingVerification')}</p>
+              <p className="text-sm text-muted-foreground">{t('admin.pendingBannerDesc')}</p>
             </div>
-            <Link href="/admin/bookings" className="btn inline-flex items-center justify-center gap-2 rounded-[4px] bg-[var(--accent-lime)] px-4 py-2.5 text-sm font-medium text-[#0c0a08] transition hover:opacity-90 active:scale-[0.97]">
+          </div>
+          <Button
+            asChild
+            className="shrink-0 bg-[var(--accent-lime)] text-[#0c0a08] hover:bg-[var(--accent-lime)]/90"
+          >
+            <Link href="/admin/bookings">
               {t('admin.verifyPayments')} <ArrowRight size={16} />
             </Link>
+          </Button>
+        </div>
+      ) : (
+        <div className="flex items-center gap-3.5 rounded-xl border border-border bg-card p-4 sm:p-5">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
+            <CheckCircle2 size={20} />
+          </span>
+          <div>
+            <p className="font-medium">{t('admin.allClearTitle')}</p>
+            <p className="text-sm text-muted-foreground">{t('admin.allClearDesc')}</p>
+          </div>
+        </div>
+      )}
+
+      {/* KPIs — one panel, divided columns */}
+      <div className="overflow-hidden rounded-xl border border-border bg-card" id="admin-stats">
+        <dl className="grid grid-cols-2 lg:grid-cols-4">
+          {kpis.map((kpi, i) => (
+            <div
+              key={kpi.label}
+              className={cn(
+                'flex flex-col gap-2 p-5',
+                i % 2 !== 0 && 'border-l border-border',
+                i >= 2 && 'border-t border-border',
+                'lg:border-t-0',
+                i === 0 ? 'lg:border-l-0' : 'lg:border-l',
+              )}
+            >
+              <dt className="text-[11px] font-medium uppercase tracking-[0.04em] text-muted-foreground">{kpi.label}</dt>
+              <dd className="text-2xl font-semibold tracking-tight tabular-nums" suppressHydrationWarning>
+                {kpi.value}
+              </dd>
+              <dd className="text-xs text-muted-foreground">{kpi.caption}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+
+      {/* Revenue trend + summary */}
+      <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]" id="admin-trends">
+        <div className="rounded-xl border border-border bg-card">
+          <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
+            <h2 className="text-base font-semibold tracking-tight">{t('admin.last7Days')}</h2>
+            <span className="text-xs font-medium uppercase tracking-[0.04em] text-muted-foreground">
+              {t('admin.revenueTrend')}
+            </span>
+          </div>
+          <div className="p-5">
+            {dailyChart.length === 0 ? (
+              <p className="py-16 text-center text-sm text-muted-foreground">No revenue data yet.</p>
+            ) : (
+              <ChartContainer config={chartConfig} className="aspect-auto h-[240px] w-full">
+                <BarChart accessibilityLayer data={dailyChart} margin={{ left: 4, right: 4, top: 8 }}>
+                  <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                  <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={10} />
+                  <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+                  <Bar dataKey="revenue" fill="var(--color-revenue)" radius={[6, 6, 0, 0]} maxBarSize={44} />
+                </BarChart>
+              </ChartContainer>
+            )}
           </div>
         </div>
 
-        {/* Revenue Summary */}
-        <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-5 text-[var(--text-primary)]">
-          <p className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-[0.02em]">{t('admin.todayRevenue')}</p>
-          <p className="mt-3 text-3xl font-semibold tracking-tight text-[var(--text-primary)]" suppressHydrationWarning>{money.format(todayRevenue)}</p>
-          <p className="mt-2 text-xs text-[var(--text-muted)]" suppressHydrationWarning>{todayLabel}</p>
-          <div className="mt-6 border-t border-[var(--border-subtle)] pt-4">
-            <p className="text-xs text-[var(--text-muted)] uppercase tracking-[0.02em]">{t('admin.thisMonthRevenue')}</p>
-            <p className="mt-1 text-xl font-semibold text-[var(--text-primary)]" suppressHydrationWarning>{money.format(thisMonthRevenue)}</p>
-            <p className="mt-1 text-xs text-[var(--text-muted)]" suppressHydrationWarning>{monthLabel}</p>
+        <div className="rounded-xl border border-border bg-card p-5">
+          <p className="text-[11px] font-medium uppercase tracking-[0.04em] text-muted-foreground">
+            {t('admin.todayRevenue')}
+          </p>
+          <p className="mt-1.5 text-3xl font-semibold tracking-tight tabular-nums" suppressHydrationWarning>
+            {money.format(todayRevenue)}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground" suppressHydrationWarning>{todayLabel}</p>
+
+          <div className="mt-5 border-t border-border pt-4">
+            <p className="text-[11px] font-medium uppercase tracking-[0.04em] text-muted-foreground">
+              {t('admin.thisMonthRevenue')}
+            </p>
+            <p className="mt-1 text-xl font-semibold tracking-tight tabular-nums" suppressHydrationWarning>
+              {money.format(thisMonthRevenue)}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground" suppressHydrationWarning>{monthLabel}</p>
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* Charts & Trends */}
-      <div className="grid gap-5 xl:grid-cols-2" id="admin-trends">
-        <TrendTable title={t('admin.last7Days')} label={t('admin.date')} rows={last7Days} />
-        <TrendTable title={t('admin.last6Months')} label={t('admin.monthCol')} rows={last6Months} />
+      {/* Last 6 months */}
+      <div className="rounded-xl border border-border bg-card">
+        <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
+          <h2 className="text-base font-semibold tracking-tight">{t('admin.last6Months')}</h2>
+          <span className="text-xs font-medium uppercase tracking-[0.04em] text-muted-foreground">
+            {t('admin.revenueTrend')}
+          </span>
+        </div>
+        <div className="px-5 py-2">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead>{t('admin.monthCol')}</TableHead>
+                <TableHead className="text-right">{t('admin.revenueTrend')}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {last6Months.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={2} className="py-10 text-center text-muted-foreground">
+                    No revenue data yet.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                last6Months.map((row) => (
+                  <TableRow key={row.month}>
+                    <TableCell className="font-medium">{row.month}</TableCell>
+                    <TableCell className="text-right font-semibold tabular-nums" suppressHydrationWarning>
+                      {money.format(row.revenue)}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </div>
   );

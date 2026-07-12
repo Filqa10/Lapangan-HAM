@@ -195,6 +195,11 @@ const id: Record<string, string> = {
   'admin.confirmPaid': 'Konfirmasi Lunas',
   'admin.cancelBooking': 'Batalkan',
   'admin.verifyPayments': 'Verifikasi Pembayaran',
+  'admin.pendingBannerDesc': 'Tinjau bukti pembayaran untuk mengonfirmasi atau menolak booking.',
+  'admin.allClearTitle': 'Semua pembayaran terverifikasi',
+  'admin.allClearDesc': 'Tidak ada antrean — pengajuan baru akan muncul di sini.',
+  'admin.overview': 'Ringkasan operasional',
+  'admin.revenueTrend': 'Pendapatan',
 
   // Admin Fields
   'admin.manageFields': 'Kelola Lapangan',
