@@ -76,10 +76,28 @@ export function BookingCreateForm({
     ? calculateBookingPrice(selectedDate, startHour, endHour)
     : { total: 0, dp: 0 };
 
-  const startOptions = BOOKING_PRICE_SLOTS.map((slot) => slot.startHour);
-  const endOptions = Array.from(new Set(BOOKING_PRICE_SLOTS.map((slot) => slot.endHour))).filter(
-    (hour) => hour > startHour,
-  );
+  const startOptions = BOOKING_PRICE_SLOTS.filter((slot) => {
+    if (!selectedDate) return true;
+    const day = selectedDate.getDay();
+    if (day >= 1 && day <= 4) return slot.weekdayPrice !== null;
+    if (day === 5) return slot.fridayPrice !== null;
+    return true;
+  }).map((slot) => slot.startHour);
+
+  const endOptions = Array.from(new Set(BOOKING_PRICE_SLOTS.map((slot) => slot.endHour)))
+    .filter((hour) => hour > startHour)
+    .filter((hour) => {
+      if (!selectedDate) return true;
+      const day = selectedDate.getDay();
+      const intermediateSlots = BOOKING_PRICE_SLOTS.filter(
+        (slot) => slot.startHour >= startHour && slot.endHour <= hour
+      );
+      return intermediateSlots.every((slot) => {
+        if (day >= 1 && day <= 4) return slot.weekdayPrice !== null;
+        if (day === 5) return slot.fridayPrice !== null;
+        return true;
+      });
+    });
 
   const canProceedToStep2 = fieldId && bookingDate && price.total > 0;
   const successBookingId = state.ok ? state.bookingId ?? null : null;
@@ -147,7 +165,38 @@ export function BookingCreateForm({
               <Flatpickr
                 value={selectedDate ?? ''}
                 options={{ dateFormat: 'Y-m-d', minDate: 'today', disableMobile: false }}
-                onChange={([date]) => setSelectedDate(date ?? null)}
+                onChange={([date]) => {
+                  setSelectedDate(date ?? null);
+                  if (date) {
+                    const day = date.getDay();
+                    const availableSlots = BOOKING_PRICE_SLOTS.filter((slot) => {
+                      if (day >= 1 && day <= 4) return slot.weekdayPrice !== null;
+                      if (day === 5) return slot.fridayPrice !== null;
+                      return true;
+                    });
+                    
+                    const isStartAvailable = availableSlots.some((slot) => slot.startHour === startHour);
+                    if (!isStartAvailable && availableSlots.length > 0) {
+                      const firstAvailable = availableSlots[0];
+                      setStartHour(firstAvailable.startHour);
+                      setEndHour(firstAvailable.endHour);
+                    } else {
+                      const isRangeAvailable = BOOKING_PRICE_SLOTS.filter(
+                        (slot) => slot.startHour >= startHour && slot.endHour <= endHour
+                      ).every((slot) => {
+                        if (day >= 1 && day <= 4) return slot.weekdayPrice !== null;
+                        if (day === 5) return slot.fridayPrice !== null;
+                        return true;
+                      });
+                      if (!isRangeAvailable && availableSlots.length > 0) {
+                        const currentSlot = availableSlots.find((slot) => slot.startHour === startHour);
+                        if (currentSlot) {
+                          setEndHour(currentSlot.endHour);
+                        }
+                      }
+                    }
+                  }
+                }}
                 placeholder={t('booking.pickDate')}
                 className="w-full rounded-[4px] border border-[#d2cecb] dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 text-[15px] text-[#0c0a08] dark:text-white placeholder:text-[#999ba3] transition focus:border-slate-600 focus:ring-0"
               />
