@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Calendar, ExternalLink, ReceiptText, Copy, Phone, Mail } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Calendar, ReceiptText, Copy, Phone, Mail } from 'lucide-react';
 
 import { useTranslation } from '@/lib/i18n';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -68,6 +68,16 @@ export function AdminBookingsClient({
 }) {
   const { t } = useTranslation();
   const [statusFilter, setStatusFilter] = useState('');
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!previewImage) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setPreviewImage(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [previewImage]);
 
   const filtered = statusFilter
     ? bookings.filter((b) => b.status === statusFilter)
@@ -149,22 +159,21 @@ export function AdminBookingsClient({
           <div className="mt-2">
             {row.receiptUrl ? (
               <div className="space-y-2">
-                <a
-                  href={row.receiptUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn inline-flex items-center gap-1.5 rounded-[4px] border border-[var(--border-subtle)] bg-[var(--bg-card)] px-2.5 py-1 text-xs font-medium text-[var(--text-primary)] transition hover:bg-[var(--bg-action-hover)]"
+                <button
+                  type="button"
+                  onClick={() => setPreviewImage(row.receiptUrl)}
+                  className="btn inline-flex items-center gap-1.5 rounded-[4px] border border-[var(--border-subtle)] bg-[var(--bg-card)] px-2.5 py-1 text-xs font-medium text-[var(--text-primary)] transition hover:bg-[var(--bg-action-hover)] cursor-pointer"
                 >
-                  <ExternalLink size={12} />
-                  Lihat Bukti Asli
-                </a>
+                  <ReceiptText size={12} />
+                  Pratinjau Bukti
+                </button>
                 <div className="relative aspect-video max-h-24 md:max-h-28 overflow-hidden rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-body)]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={row.receiptUrl}
                     alt="Bukti Transfer"
                     className="h-full w-full object-contain hover:scale-105 transition duration-200 cursor-zoom-in"
-                    onClick={() => window.open(row.receiptUrl!, '_blank')}
+                    onClick={() => setPreviewImage(row.receiptUrl)}
                   />
                 </div>
               </div>
@@ -229,6 +238,40 @@ export function AdminBookingsClient({
           </div>
         </div>
       ),
+    },
+    {
+      key: 'receipt',
+      label: 'Bukti Transfer',
+      sortable: false,
+      render: (row: BookingItem) => {
+        if (row.receiptUrl) {
+          return (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setPreviewImage(row.receiptUrl);
+              }}
+              className="relative h-10 w-16 overflow-hidden rounded border border-[var(--border-subtle)] bg-[var(--bg-body)] hover:opacity-80 transition cursor-pointer"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={row.receiptUrl}
+                alt="Bukti Transfer"
+                className="h-full w-full object-cover"
+              />
+            </button>
+          );
+        }
+        if (row.receiptUnavailable) {
+          return (
+            <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
+              Tidak Tersedia
+            </span>
+          );
+        }
+        return <span className="text-xs text-[var(--text-muted)]">—</span>;
+      }
     },
     {
       key: 'status',
@@ -372,6 +415,33 @@ export function AdminBookingsClient({
           expandableRender={renderDetails}
         />
       </div>
+
+      {previewImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div
+            className="relative max-h-[90vh] max-w-[90vw] overflow-hidden rounded-lg bg-slate-900 p-2 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setPreviewImage(null)}
+              className="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 transition cursor-pointer"
+              aria-label="Close"
+            >
+              ✕
+            </button>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={previewImage}
+              alt="Bukti Transfer Preview"
+              className="max-h-[80vh] max-w-[85vw] object-contain rounded"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
