@@ -33,6 +33,12 @@ vi.mock('@/actions/bookings', () => ({
   createBookingAction: vi.fn(),
 }));
 
+vi.mock('@/lib/supabase/client', () => ({
+  createClient: () => ({
+    rpc: vi.fn().mockResolvedValue({ data: [], error: null }),
+  }),
+}));
+
 describe('BookingCreateForm', () => {
   const mockStorage = () => {
     const storage = {

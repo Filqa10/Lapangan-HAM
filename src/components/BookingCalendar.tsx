@@ -98,10 +98,10 @@ export function BookingCalendar({ bookings }: BookingCalendarProps) {
   const goToToday = () => setCurrentDate(new Date(today.getFullYear(), today.getMonth(), 1));
 
   return (
-    <div className="rounded-[12px] border border-[#d2cecb] dark:border-slate-800 bg-white dark:bg-slate-900/60 p-6" id="booking-calendar">
+    <div className="rounded-xl border border-border bg-card p-5" id="booking-calendar">
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
-        <h3 className="text-[18px] font-medium uppercase tracking-[0.02em] text-[#0c0a08] dark:text-white">{t('dashboard.bookingCalendar')}</h3>
+        <h3 className="text-base font-semibold tracking-tight text-foreground">{t('dashboard.bookingCalendar')}</h3>
         <div className="flex items-center gap-1">
           <button
             type="button"

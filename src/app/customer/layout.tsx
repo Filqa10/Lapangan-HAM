@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/server';
-import { CustomerNavbar } from '@/components/CustomerNavbar';
+import { DashboardShell } from '@/components/dashboard-shell';
 
 export default async function CustomerLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -16,11 +16,8 @@ export default async function CustomerLayout({ children }: { children: React.Rea
     .maybeSingle();
 
   return (
-    <div className="min-h-screen bg-[var(--bg-body)]">
-      <CustomerNavbar userName={profile?.name ?? user.email ?? undefined} />
-      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        {children}
-      </main>
-    </div>
+    <DashboardShell variant="customer" userName={profile?.name ?? user.email ?? 'Customer'}>
+      {children}
+    </DashboardShell>
   );
 }

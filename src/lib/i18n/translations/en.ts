@@ -195,6 +195,11 @@ const en: Record<string, string> = {
   'admin.confirmPaid': 'Confirm Paid',
   'admin.cancelBooking': 'Cancel',
   'admin.verifyPayments': 'Verify Payments',
+  'admin.pendingBannerDesc': 'Review payment proofs to confirm or decline bookings.',
+  'admin.allClearTitle': 'All payments verified',
+  'admin.allClearDesc': "You're all caught up — new submissions will show up here.",
+  'admin.overview': 'Operations overview',
+  'admin.revenueTrend': 'Revenue',
 
   // Admin Fields
   'admin.manageFields': 'Manage Fields',
@@ -286,6 +291,7 @@ const en: Record<string, string> = {
   'about.schedule.title': 'Field Availability for the Next 5 Days',
   'about.schedule.subtitle': 'Track live slot availability on our field. Select an empty slot to book instantly.',
   'about.schedule.booked': 'Booked',
+  'about.schedule.closed': 'Closed',
   'about.schedule.available': 'Available',
   'about.schedule.loading': 'Loading schedule...',
   'about.schedule.mapTitle': 'HAM Stadium Location',

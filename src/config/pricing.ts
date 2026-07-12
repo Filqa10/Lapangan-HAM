@@ -27,12 +27,16 @@ export function calculateBookingPrice(
 
   for (const slot of BOOKING_PRICE_SLOTS) {
     if (slot.startHour >= startHour && slot.endHour <= endHour) {
-      let price = slot.weekendPrice;
+      let price: number | null = slot.weekendPrice;
 
       if (day >= 1 && day <= 4) {
-        price = slot.weekdayPrice ?? slot.weekendPrice;
+        price = slot.weekdayPrice;
       } else if (day === 5) {
-        price = slot.fridayPrice ?? slot.weekendPrice;
+        price = slot.fridayPrice;
+      }
+
+      if (price === null) {
+        return { total: 0, dp: 0 };
       }
 
       total += price;

@@ -1,8 +1,9 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useState, useEffect } from 'react';
 import Flatpickr from 'react-flatpickr';
 import { Calendar, Clock, CreditCard, ChevronRight, ChevronLeft, Info } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 import { createBookingAction } from '@/actions/bookings';
 import { BOOKING_ACTION_INITIAL_STATE } from '@/actions/bookings-utils';
@@ -70,16 +71,140 @@ export function BookingCreateForm({
   const [endHour, setEndHour] = useState(initialEnd);
   const [paymentOption, setPaymentOption] = useState<'dp' | 'full'>('dp');
 
+  const [bookedSlots, setBookedSlots] = useState<{ start_time: string; end_time: string }[]>([]);
+
+  const handleDateChange = async (date: Date | null) => {
+    setSelectedDate(date);
+    if (!date) {
+      setBookedSlots([]);
+      return;
+    }
+
+    const supabase = createClient();
+    const dateStr = formatLocalDate(date);
+    const { data, error } = await supabase
+      .rpc('get_booked_slots', { p_start_date: dateStr, p_end_date: dateStr });
+
+    const slots = !error && data ? data : [];
+    setBookedSlots(slots);
+
+    const day = date.getDay();
+    const availableSlots = BOOKING_PRICE_SLOTS.filter((slot) => {
+      const isOpHourOpen = day >= 1 && day <= 4
+        ? slot.weekdayPrice !== null
+        : (day === 5 ? slot.fridayPrice !== null : true);
+
+      if (!isOpHourOpen) return false;
+
+      const isBooked = slots.some((b: { start_time: string; end_time: string }) => {
+        const bStart = Number(b.start_time.split(':')[0]);
+        const bEnd = Number(b.end_time.split(':')[0]);
+        return Math.max(slot.startHour, bStart) < Math.min(slot.endHour, bEnd);
+      });
+
+      return !isBooked;
+    });
+
+    if (availableSlots.length === 0) return;
+
+    const isStartAvailable = availableSlots.some((slot) => slot.startHour === startHour);
+    if (!isStartAvailable) {
+      const firstAvailable = availableSlots[0];
+      setStartHour(firstAvailable.startHour);
+      setEndHour(firstAvailable.endHour);
+    } else {
+      const isRangeAvailable = BOOKING_PRICE_SLOTS.filter(
+        (slot) => slot.startHour >= startHour && slot.endHour <= endHour
+      ).every((slot) => {
+        const isOpHourOpen = day >= 1 && day <= 4
+          ? slot.weekdayPrice !== null
+          : (day === 5 ? slot.fridayPrice !== null : true);
+
+        if (!isOpHourOpen) return false;
+
+        const isBooked = slots.some((b: { start_time: string; end_time: string }) => {
+          const bStart = Number(b.start_time.split(':')[0]);
+          const bEnd = Number(b.end_time.split(':')[0]);
+          return Math.max(slot.startHour, bStart) < Math.min(slot.endHour, bEnd);
+        });
+
+        return !isBooked;
+      });
+
+      if (!isRangeAvailable) {
+        const currentSlot = availableSlots.find((slot) => slot.startHour === startHour);
+        if (currentSlot) {
+          setEndHour(currentSlot.endHour);
+        }
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (selectedDate) {
+      const supabase = createClient();
+      const dateStr = formatLocalDate(selectedDate);
+      supabase
+        .rpc('get_booked_slots', { p_start_date: dateStr, p_end_date: dateStr })
+        .then(({ data, error }) => {
+          if (!error && data) {
+            setBookedSlots(data);
+          }
+        });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const selectedField = fields.find((f) => String(f.id) === fieldId);
   const bookingDate = selectedDate ? formatLocalDate(selectedDate) : '';
   const price = selectedDate && startHour < endHour
     ? calculateBookingPrice(selectedDate, startHour, endHour)
     : { total: 0, dp: 0 };
 
-  const startOptions = BOOKING_PRICE_SLOTS.map((slot) => slot.startHour);
-  const endOptions = Array.from(new Set(BOOKING_PRICE_SLOTS.map((slot) => slot.endHour))).filter(
-    (hour) => hour > startHour,
-  );
+  const startOptions = BOOKING_PRICE_SLOTS.filter((slot) => {
+    if (!selectedDate) return true;
+    const day = selectedDate.getDay();
+    const isOpHourOpen = day >= 1 && day <= 4
+      ? slot.weekdayPrice !== null
+      : (day === 5 ? slot.fridayPrice !== null : true);
+
+    if (!isOpHourOpen) return false;
+
+    const isBooked = bookedSlots.some((b) => {
+      const bStart = Number(b.start_time.split(':')[0]);
+      const bEnd = Number(b.end_time.split(':')[0]);
+      return Math.max(slot.startHour, bStart) < Math.min(slot.endHour, bEnd);
+    });
+
+    return !isBooked;
+  }).map((slot) => slot.startHour);
+
+  const endOptions = Array.from(new Set(BOOKING_PRICE_SLOTS.map((slot) => slot.endHour)))
+    .filter((hour) => hour > startHour)
+    .filter((hour) => {
+      if (!selectedDate) return true;
+      const day = selectedDate.getDay();
+      
+      const intermediateSlots = BOOKING_PRICE_SLOTS.filter(
+        (slot) => slot.startHour >= startHour && slot.endHour <= hour
+      );
+      
+      const allOpen = intermediateSlots.every((slot) => {
+        if (day >= 1 && day <= 4) return slot.weekdayPrice !== null;
+        if (day === 5) return slot.fridayPrice !== null;
+        return true;
+      });
+
+      if (!allOpen) return false;
+
+      const isBookedRange = bookedSlots.some((b) => {
+        const bStart = Number(b.start_time.split(':')[0]);
+        const bEnd = Number(b.end_time.split(':')[0]);
+        return Math.max(startHour, bStart) < Math.min(hour, bEnd);
+      });
+
+      return !isBookedRange;
+    });
 
   const canProceedToStep2 = fieldId && bookingDate && price.total > 0;
   const successBookingId = state.ok ? state.bookingId ?? null : null;
@@ -147,7 +272,7 @@ export function BookingCreateForm({
               <Flatpickr
                 value={selectedDate ?? ''}
                 options={{ dateFormat: 'Y-m-d', minDate: 'today', disableMobile: false }}
-                onChange={([date]) => setSelectedDate(date ?? null)}
+                onChange={([date]) => handleDateChange(date ?? null)}
                 placeholder={t('booking.pickDate')}
                 className="w-full rounded-[4px] border border-[#d2cecb] dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 text-[15px] text-[#0c0a08] dark:text-white placeholder:text-[#999ba3] transition focus:border-slate-600 focus:ring-0"
               />

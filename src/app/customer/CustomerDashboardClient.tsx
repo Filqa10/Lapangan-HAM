@@ -1,11 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { Calendar, Clock, DollarSign, ArrowRight } from 'lucide-react';
+import { Calendar, Clock, ArrowRight } from 'lucide-react';
 
+import { cn } from '@/lib/utils';
 import { useTranslation } from '@/lib/i18n';
 import { StatusBadge } from '@/components/StatusBadge';
 import { BookingCalendar } from '@/components/BookingCalendar';
+import { Button } from '@/components/ui/button';
 
 type Props = {
   userName: string;
@@ -41,161 +43,139 @@ function getGreeting(t: (key: string) => string): string {
 export function CustomerDashboardClient({ userName, stats, recentBookings, calendarBookings }: Props) {
   const { t } = useTranslation();
 
+  const statItems = [
+    { label: t('dashboard.totalBooking'), value: stats.total },
+    { label: t('dashboard.waiting'), value: stats.waiting },
+    { label: t('dashboard.confirmed'), value: stats.confirmed },
+    { label: t('dashboard.cancelled'), value: stats.cancelled },
+  ];
+
   return (
-    <div className="space-y-8 font-sans text-[#0c0a08]">
-      {/* Hero Greeting Card - Dawn-lit Sky Gradient */}
+    <div className="space-y-6 lg:space-y-8">
+      {/* Welcome band — restrained obsidian with a single dawn-cobalt glow */}
       <section
-        className="relative overflow-hidden rounded-[12px] p-8 sm:p-10 text-white"
+        className="relative overflow-hidden rounded-xl p-6 text-white sm:p-8"
         id="dashboard-hero"
         style={{
-          background: 'linear-gradient(165deg, #0c0a08 0%, #0c0a08 30%, #1d2740 60%, #3a548c 80%, #5683d2 92%, #f4f2f0 100%)',
+          background:
+            'radial-gradient(125% 125% at 88% -10%, rgba(86,131,210,0.40) 0%, rgba(86,131,210,0) 46%), #0c0a08',
         }}
       >
-        <div className="relative z-10 grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
-          <div>
-            <span className="inline-flex items-center gap-2 text-[12px] font-medium uppercase tracking-[0.02em] text-[#999ba3]" suppressHydrationWarning>
-              <span className="inline-block h-[6px] w-[6px] rounded-full bg-[#e4f222]" />
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <span
+              className="inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.08em] text-white/60"
+              suppressHydrationWarning
+            >
+              <span className="inline-block size-1.5 rounded-full bg-[#e4f222]" />
               {getGreeting(t)} {t('dashboard.greeting.emoji')}
             </span>
-            <h1 className="mt-3 text-[32px] sm:text-[40px] font-normal leading-[1.1] tracking-tight uppercase text-white">
+            <h1 className="mt-2.5 truncate text-2xl font-semibold tracking-tight text-white sm:text-3xl">
               {userName}
             </h1>
-            <p className="mt-3 max-w-xl text-[16px] leading-relaxed text-white/70">
+            <p className="mt-2 max-w-md text-sm leading-relaxed text-white/65">
               {t('dashboard.readyToPlay')}
             </p>
-            <div className="mt-4 flex items-center gap-2 text-[13px] text-white/45">
-              <span className="inline-flex items-center gap-1.5" suppressHydrationWarning>
-                <Clock size={14} />
-                {t('dashboard.today')} — {new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-              </span>
-            </div>
+            <p className="mt-3 inline-flex items-center gap-1.5 text-xs text-white/45" suppressHydrationWarning>
+              <Clock size={13} />
+              {t('dashboard.today')} — {new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row lg:flex-col shrink-0">
-            <Link
-              href="/customer/booking/create"
-              className="btn flex items-center justify-center gap-2 rounded-[4px] bg-[#e4f222] px-5 py-3 text-[15px] font-medium text-[#0c0a08] transition duration-150 hover:opacity-90 active:scale-[0.97]"
-            >
+          <Button
+            asChild
+            size="lg"
+            className="shrink-0 bg-[#e4f222] text-[#0c0a08] hover:bg-[#e4f222]/90"
+          >
+            <Link href="/customer/booking/create">
               <Calendar size={16} />
               {t('dashboard.bookNow')}
             </Link>
-          </div>
+          </Button>
         </div>
       </section>
 
-      {/* Stats Summary Strip - Typography-led & Desaturated */}
-      <section
-        className="rounded-[12px] border border-[#d2cecb] dark:border-slate-800 bg-[#f4f2f0] dark:bg-slate-900/40 p-6"
-        id="dashboard-stats"
-      >
-        <div className="grid grid-cols-2 gap-y-6 gap-x-4 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-[#d2cecb]/40 dark:divide-slate-800">
-          <div className="flex flex-col">
-            <span className="text-[12px] font-medium uppercase tracking-[0.02em] text-[#999ba3]">
-              {t('dashboard.totalBooking')}
-            </span>
-            <span className="mt-2 text-[32px] font-normal tracking-tight text-[#0c0a08] dark:text-white leading-none">
-              {stats.total}
-            </span>
-          </div>
-          <div className="flex flex-col pt-4 sm:pt-0 sm:pl-6">
-            <span className="text-[12px] font-medium uppercase tracking-[0.02em] text-[#999ba3]">
-              {t('dashboard.waiting')}
-            </span>
-            <span className="mt-2 text-[32px] font-normal tracking-tight text-[#0c0a08] dark:text-white leading-none">
-              {stats.waiting}
-            </span>
-          </div>
-          <div className="flex flex-col pt-4 sm:pt-0 sm:pl-6">
-            <span className="text-[12px] font-medium uppercase tracking-[0.02em] text-[#999ba3]">
-              {t('dashboard.confirmed')}
-            </span>
-            <span className="mt-2 text-[32px] font-normal tracking-tight text-[#0c0a08] dark:text-white leading-none">
-              {stats.confirmed}
-            </span>
-          </div>
-          <div className="flex flex-col pt-4 sm:pt-0 sm:pl-6">
-            <span className="text-[12px] font-medium uppercase tracking-[0.02em] text-[#999ba3]">
-              {t('dashboard.cancelled')}
-            </span>
-            <span className="mt-2 text-[32px] font-normal tracking-tight text-[#0c0a08] dark:text-white leading-none">
-              {stats.cancelled}
-            </span>
-          </div>
-        </div>
-      </section>
-
-      {/* Main Content Area: Recent Bookings & Calendar */}
-      <section className="grid gap-6 lg:grid-cols-[1fr_360px]" id="dashboard-main">
-        {/* Recent Booking Activity */}
-        <div className="rounded-[12px] border border-[#d2cecb] dark:border-slate-800 bg-white dark:bg-slate-900/60 p-6 flex flex-col justify-between">
-          <div>
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-[18px] font-medium uppercase tracking-[0.02em] text-[#0c0a08] dark:text-white">
-                {t('dashboard.bookingActivity')}
-              </h2>
-              <Link href="/customer/history" className="text-[14px] font-medium text-[#0c0a08] dark:text-white transition hover:text-[#5683d2] hover:underline">
-                {t('dashboard.viewAll')} →
-              </Link>
+      {/* Stats — one panel, divided columns (avoids identical card grid) */}
+      <div className="overflow-hidden rounded-xl border border-border bg-card" id="dashboard-stats">
+        <dl className="grid grid-cols-2 sm:grid-cols-4">
+          {statItems.map((item, i) => (
+            <div
+              key={item.label}
+              className={cn(
+                'flex flex-col gap-2 p-5',
+                i % 2 !== 0 && 'border-l border-border',
+                i >= 2 && 'border-t border-border',
+                'sm:border-t-0',
+                i === 0 ? 'sm:border-l-0' : 'sm:border-l',
+              )}
+            >
+              <dt className="text-[11px] font-medium uppercase tracking-[0.04em] text-muted-foreground">
+                {item.label}
+              </dt>
+              <dd className="text-3xl font-semibold tracking-tight tabular-nums">{item.value}</dd>
             </div>
+          ))}
+        </dl>
+      </div>
 
+      {/* Booking activity + calendar */}
+      <section className="grid gap-6 lg:grid-cols-[1fr_360px]" id="dashboard-main">
+        <div className="flex flex-col rounded-xl border border-border bg-card">
+          <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
+            <h2 className="text-base font-semibold tracking-tight">{t('dashboard.bookingActivity')}</h2>
+            <Link
+              href="/customer/history"
+              className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              {t('dashboard.viewAll')}
+            </Link>
+          </div>
+
+          <div className="px-5 py-2">
             {recentBookings.length === 0 ? (
-              <p className="rounded-[4px] bg-[#f4f2f0] dark:bg-slate-900 p-6 text-center text-[15px] text-[#999ba3]">
-                {t('dashboard.noBookings')}
-              </p>
+              <p className="py-12 text-center text-sm text-muted-foreground">{t('dashboard.noBookings')}</p>
             ) : (
-              <div className="divide-y divide-[#f4f2f0] dark:divide-slate-800/80">
+              <ul className="divide-y divide-border">
                 {recentBookings.map((b) => (
-                  <article
-                    key={b.id}
-                    className="stagger-item flex items-center justify-between py-4 first:pt-0 last:pb-0"
-                  >
-                    <div>
-                      <p className="text-[15px] font-medium text-[#0c0a08] dark:text-white">{b.fieldName}</p>
-                      <p className="mt-1 text-[13px] text-[#999ba3]">
-                        {b.booking_date} • {b.start_time.slice(0, 5)} - {b.end_time.slice(0, 5)} • {money.format(b.price)}
+                  <li key={b.id} className="flex items-center justify-between gap-4 py-3.5">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{b.fieldName}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground tabular-nums" suppressHydrationWarning>
+                        {b.booking_date} · {b.start_time.slice(0, 5)}–{b.end_time.slice(0, 5)} · {money.format(b.price)}
                       </p>
                     </div>
                     <StatusBadge status={b.status} />
-                  </article>
+                  </li>
                 ))}
-              </div>
+              </ul>
             )}
           </div>
         </div>
 
-        {/* Booking Calendar */}
         <BookingCalendar bookings={calendarBookings} />
       </section>
 
-      {/* Total Spending Panel - Typography-led Limestone block */}
+      {/* Total spending */}
       <section
-        className="rounded-[12px] border border-[#d2cecb] dark:border-slate-800 bg-[#f4f2f0] dark:bg-slate-900/40 p-6"
+        className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between"
         id="dashboard-spending"
       >
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[4px] bg-emerald-500/10">
-              <DollarSign size={22} className="text-emerald-500" />
-            </div>
-            <div>
-              <p className="text-[12px] font-medium uppercase tracking-[0.02em] text-[#999ba3]">
-                {t('dashboard.totalSpending')}
-              </p>
-              <p className="mt-1.5 text-[32px] font-normal tracking-tight text-[#0c0a08] dark:text-white leading-none">
-                {money.format(stats.totalSpending)}
-              </p>
-              <p className="mt-2.5 text-[13px] text-[#999ba3]">
-                {t('dashboard.fromBookings', { count: stats.successfulCount })}
-              </p>
-            </div>
-          </div>
-          <Link
-            href="/customer/history"
-            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-[4px] border border-[#d2cecb] dark:border-slate-800 bg-white dark:bg-slate-900 px-5 py-3 text-[14px] font-medium text-[#0c0a08] dark:text-white transition duration-150 hover:bg-[#f4f2f0] dark:hover:bg-slate-800 active:scale-[0.97]"
-          >
+        <div>
+          <p className="text-[11px] font-medium uppercase tracking-[0.04em] text-muted-foreground">
+            {t('dashboard.totalSpending')}
+          </p>
+          <p className="mt-1.5 text-3xl font-semibold tracking-tight tabular-nums">
+            {money.format(stats.totalSpending)}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {t('dashboard.fromBookings', { count: stats.successfulCount })}
+          </p>
+        </div>
+        <Button asChild variant="outline" className="shrink-0">
+          <Link href="/customer/history">
             {t('dashboard.viewHistory')} <ArrowRight size={15} />
           </Link>
-        </div>
+        </Button>
       </section>
     </div>
   );

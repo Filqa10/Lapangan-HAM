@@ -110,6 +110,20 @@ describe('createBookingAction', () => {
     expect(oversizedResult).toEqual({ ok: false, error: 'Ukuran bukti pembayaran maksimal 5MB.' });
     expect(supabaseMock.calls.inserts).toHaveLength(0);
   });
+
+  it('should reject booking requests for closed slots', async () => {
+    const formData = new FormData();
+    formData.append('fieldId', '1');
+    formData.append('bookingDate', '2026-07-17'); // Friday
+    formData.append('startHour', '6'); // Closed
+    formData.append('endHour', '8');
+    formData.append('paymentOption', 'dp');
+    formData.append('paymentProof', new File(['receipt'], 'receipt.png', { type: 'image/png' }));
+
+    const result = await createBookingAction({ ok: false }, formData);
+    expect(result.ok).toBe(false);
+    expect(result.error).toContain('Slot yang dipilih belum tersedia');
+  });
 });
 
 describe('submitPelunasanAction', () => {
