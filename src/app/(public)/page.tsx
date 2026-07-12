@@ -91,11 +91,10 @@ export default function AboutPage() {
         const endDate = toLocalDateString(dates[4]);
 
         const { data, error } = await supabase
-          .from('bookings')
-          .select('booking_date, start_time, end_time, status')
-          .neq('status', 'cancelled')
-          .gte('booking_date', startDate)
-          .lte('booking_date', endDate);
+          .rpc('get_booked_slots', {
+            p_start_date: startDate,
+            p_end_date: endDate,
+          });
 
         if (error) {
           console.error('Error fetching bookings:', error);
@@ -124,6 +123,13 @@ export default function AboutPage() {
 
       return overlapStart < overlapEnd;
     });
+  };
+
+  const isSlotClosed = (date: Date, slot: typeof BOOKING_PRICE_SLOTS[number]) => {
+    const day = date.getDay();
+    if (day >= 1 && day <= 4) return slot.weekdayPrice === null;
+    if (day === 5) return slot.fridayPrice === null;
+    return false;
   };
 
   useEffect(() => {
@@ -589,7 +595,28 @@ export default function AboutPage() {
                       <div className="space-y-3">
                         {BOOKING_PRICE_SLOTS.map((slot) => {
                           const isBooked = isSlotBooked(dateStr, slot.startHour, slot.endHour);
+                          const isClosed = isSlotClosed(date, slot);
                           const { total: slotPrice } = calculateBookingPrice(date, slot.startHour, slot.endHour);
+
+                          if (isClosed) {
+                            return (
+                              <div
+                                key={`${slot.startHour}-${slot.endHour}`}
+                                className="flex flex-col items-start gap-1 rounded-[8px] border border-[#d2cecb]/40 p-3 select-none"
+                                style={{ backgroundColor: '#e2e0de', color: '#999ba3' }}
+                              >
+                                <div className="flex w-full items-center justify-between">
+                                  <span className="text-[13px] font-medium">
+                                    {fmtHour(slot.startHour)} – {fmtHour(slot.endHour)}
+                                  </span>
+                                  <Minus size={14} className="text-[#999ba3]" />
+                                </div>
+                                <span className="text-[12px] font-medium uppercase tracking-wide opacity-80">
+                                  {t('about.schedule.closed')}
+                                </span>
+                              </div>
+                            );
+                          }
 
                           if (isBooked) {
                             return (

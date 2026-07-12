@@ -291,6 +291,7 @@ const en: Record<string, string> = {
   'about.schedule.title': 'Field Availability for the Next 5 Days',
   'about.schedule.subtitle': 'Track live slot availability on our field. Select an empty slot to book instantly.',
   'about.schedule.booked': 'Booked',
+  'about.schedule.closed': 'Closed',
   'about.schedule.available': 'Available',
   'about.schedule.loading': 'Loading schedule...',
   'about.schedule.mapTitle': 'HAM Stadium Location',

@@ -291,6 +291,7 @@ const id: Record<string, string> = {
   'about.schedule.title': 'Ketersediaan Lapangan 5 Hari Ke Depan',
   'about.schedule.subtitle': 'Pantau ketersediaan slot lapangan secara langsung. Pilih slot kosong untuk langsung melakukan booking.',
   'about.schedule.booked': 'Sudah Dipesan',
+  'about.schedule.closed': 'Tutup',
   'about.schedule.available': 'Tersedia',
   'about.schedule.loading': 'Memuat jadwal...',
   'about.schedule.mapTitle': 'Lokasi Stadion HAM',
